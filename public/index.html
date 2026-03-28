@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brat Studio — The Ultimate Remake</title>
+    <link rel="stylesheet" href="/style.css">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+    <!-- EDITOR VIEW (hidden on share links) -->
+    <div id="editorView">
+        <header>
+            <h1>brat studio</h1>
+            <p class="subtitle">the ultimate brat text builder.</p>
+        </header>
+
+        <div class="controls">
+            <!-- Preset Themes -->
+            <div class="preset-themes">
+                <span class="preset-label">quick theme:</span>
+                <button id="presetWhite" class="preset-btn active" data-bg="#ffffff" data-text="#000000">white</button>
+                <button id="presetGreen" class="preset-btn" data-bg="#8ACE00" data-text="#000000">green</button>
+                <button id="presetBlack" class="preset-btn" data-bg="#000000" data-text="#ffffff">black</button>
+            </div>
+
+            <!-- Color Pickers -->
+            <div class="color-pickers">
+                <label class="color-label">
+                    <input type="color" id="bgColorPicker" value="#ffffff" title="Background color">
+                    <span>background</span>
+                </label>
+                <label class="color-label">
+                    <input type="color" id="textColorPicker" value="#000000" title="Text color">
+                    <span>text</span>
+                </label>
+                <button id="resetColors" class="reset-colors-btn" title="Reset to default">reset</button>
+            </div>
+
+            <textarea id="textInput" maxlength="400" placeholder="type anything... emojis work too 🔥"></textarea>
+            <div id="wordCount" class="word-count">0 / 25 words</div>
+
+            <div class="row">
+                <label for="modeSelect">mode:</label>
+                <select id="modeSelect">
+                    <option value="normal">normal</option>
+                    <option value="animate">animate (word)</option>
+                    <option value="typing">typing (char)</option>
+                </select>
+            </div>
+            
+            <div class="row hidden" id="delayRow">
+                <label for="delayRange">speed:</label>
+                <input type="range" id="delayRange" min="10" max="300" value="60" step="5">
+                <span id="delayValue" style="min-width: 65px;">60 WPM</span>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="image-upload-row">
+                <label class="img-upload-label" for="imageInput">
+                    <i class="fa-solid fa-image"></i> image background
+                </label>
+                <input type="file" id="imageInput" accept="image/*">
+                <button id="clearImageBtn" class="hidden"><i class="fa-solid fa-xmark"></i> remove</button>
+            </div>
+
+            <!-- Image Settings (visible only when image is loaded) -->
+            <div id="imageSettings" class="hidden image-settings">
+                <div class="img-setting-row">
+                    <label for="imgOpacity"><i class="fa-solid fa-sun"></i> opacity</label>
+                    <input type="range" id="imgOpacity" min="5" max="100" value="45" step="5">
+                    <span id="imgOpacityVal">45%</span>
+                </div>
+                <div class="img-setting-row">
+                    <label><i class="fa-solid fa-arrows-up-down-left-right"></i> fit</label>
+                    <select id="imgFit">
+                        <option value="cover">cover (fill)</option>
+                        <option value="contain">contain (fit)</option>
+                        <option value="stretch">stretch</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button id="renderBtn"><i class="fa-solid fa-play"></i> preview</button>
+                <button id="shareBtn"><i class="fa-solid fa-share-nodes"></i> share</button>
+            </div>
+
+            <!-- WhatsApp Sticker Export -->
+            <div class="sticker-row">
+                <span class="preset-label"><i class="fa-solid fa-download"></i> export:</span>
+                <button id="staticStickerBtn"><i class="fa-solid fa-image"></i> image</button>
+                <button id="recordVideoBtn"><i class="fa-solid fa-video"></i> record video</button>
+            </div>
+
+            <div id="shareSection" class="hidden">
+                <input type="text" id="shareLink" readonly>
+                <div class="share-actions" style="display: flex; gap: 8px;">
+                    <button id="copyBtn" style="flex: 1;">copy link</button>
+                    <button id="waShareBtn" class="wa-btn" style="flex: 1;"><i class="fa-brands fa-whatsapp"></i> whatsapp</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CANVAS (always visible) -->
+    <div id="canvasWrap">
+        <canvas id="canvas" width="512" height="512"></canvas>
+    </div>
+
+    <!-- SHARED VIEW hint (shown only on share links) -->
+    <div id="sharedHint" class="hidden">
+        <a href="/">make your own →</a>
+    </div>
+
+    <footer>
+        <p>Remake by Me aka diddluck</p>
+        <p>Inspired by <a href="https://www.bratgenerator.com/" target="_blank">https://www.bratgenerator.com/</a></p>
+        <p><a href="/policy.html">Privacy Policy & Terms</a> | <a href="/docs.html">How to Use (Docs)</a></p>
+        <p>Thank u visiting this web</p>
+    </footer>
+
+    <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #efefef;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px 16px 0;
+    gap: 22px;
+}
+
+/* HEADER */
+header {
+    text-align: center;
+}
+
+header h1 {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    text-transform: lowercase;
+}
+
+header .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* EDITOR */
+#editorView {
+    width: 100%;
+    max-width: 512px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fff;
+    padding: 16px;
+    border: 1px solid #000;
+}
+
+textarea {
+    width: 100%;
+    height: 56px;
+    font-size: 16px;
+    padding: 16px 20px;
+    font-family: inherit;
+    border: 1px solid #ccc;
+    border-radius: 28px;
+    resize: none;
+    outline: none;
+    line-height: 1.4;
+    background: #fff;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    transition: all 0.2s ease;
+}
+
+textarea:focus {
+    border-color: #888;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.word-count {
+    font-size: 11px;
+    color: #999;
+    text-align: center;
+    margin-top: -6px;
+}
+
+.word-count.warn {
+    color: #c00;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+select {
+    padding: 5px 8px;
+    font-size: 14px;
+    border: 1px solid #aaa;
+    outline: none;
+    background: #fafafa;
+    cursor: pointer;
+}
+
+/* 8-BIT PIXEL ART SLIDER CUSTOMIZATION */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex-grow: 1;
+    height: 14px;
+    background: #e0e0e0;
+    border: 3px solid #000;
+    outline: none;
+    cursor: pointer;
+    image-rendering: pixelated; 
+}
+
+/* Chrome / Safari / Edge Thumb */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 28px;
+    background: #8ACE00; /* iconic brat green */
+    border: 3px solid #000;
+    cursor: e-resize;
+    box-shadow: 3px 3px 0px #000; /* hard pixel shadow */
+    border-radius: 0;
+}
+input[type="range"]:active::-webkit-slider-thumb {
+    background: #000;
+    box-shadow: 1px 1px 0px #000;
+    transform: translate(2px, 2px);
+}
+
+/* Firefox Thumb */
+input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 22px;
+    background: #8ACE00;
+    border: 3px solid #000;
+    cursor: e-resize;
+    box-shadow: 3px 3px 0px #000;
+    border-radius: 0;
+}
+input[type="range"]:active::-moz-range-thumb {
+    background: #000;
+    box-shadow: 1px 1px 0px #000;
+    transform: translate(2px, 2px);
+}
+
+#delayValue {
+    font-size: 12px;
+    color: #666;
+    min-width: 45px;
+    text-align: right;
+}
+
+.buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 9px 14px;
+    font-size: 14px;
+    background: #fff;
+    border: 1px solid #000;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: lowercase;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+    transition: background 0.1s;
+}
+
+button:hover {
+    background: #eee;
+}
+
+button:active {
+    background: #ddd;
+}
+
+/* WhatsApp Share Button */
+button.wa-btn {
+    background: #25D366;
+    color: white;
+    border-color: #128C7E;
+}
+button.wa-btn:hover {
+    background: #1eba58;
+}
+
+/* SHARE SECTION */
+#shareSection {
+    display: flex;
+    gap: 8px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#shareLink {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #aaa;
+    font-size: 13px;
+    outline: none;
+    background: #fafafa;
+}
+
+#canvasWrap {
+    width: 100%;
+    max-width: 512px;
+}
+
+canvas {
+    background-color: white;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border: 1px solid #ccc;
+    display: block;
+}
+
+/* SHARED HINT */
+#sharedHint {
+    margin-top: -10px;
+    text-align: center;
+}
+
+#sharedHint a {
+    font-size: 13px;
+    color: #444;
+    text-decoration: none;
+    border-bottom: 1px solid #aaa;
+}
+
+#sharedHint a:hover {
+    color: #000;
+    border-color: #000;
+}
+
+/* IMAGE UPLOAD */
+.image-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.img-upload-label {
+    display: inline-block;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    font-family: inherit;
+    border: 1px dashed #aaa;
+    cursor: pointer;
+    background: #fafafa;
+    text-transform: lowercase;
+    transition: border 0.15s, background 0.1s;
+}
+
+.img-upload-label:hover {
+    border-color: #000;
+    background: #f0f0f0;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+/* STICKER ROW */
+.sticker-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* IMAGE SETTINGS PANEL */
+.image-settings {
+    background: #f7f7f7;
+    border: 1px dashed #ccc;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.img-setting-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.img-setting-row label {
+    min-width: 80px;
+    font-weight: bold;
+    color: #555;
+}
+
+.img-setting-row #imgOpacityVal {
+    min-width: 36px;
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+}
+
+/* PRESET THEME BUTTONS */
+.preset-themes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.preset-label {
+    font-size: 12px;
+    color: #888;
+    margin-right: 2px;
+    white-space: nowrap;
+}
+
+.preset-btn {
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    font-family: inherit;
+    border: 2px solid #ccc;
+    background: #f5f5f5;
+    cursor: pointer;
+    text-transform: lowercase;
+    letter-spacing: 0.3px;
+    transition: border 0.1s, transform 0.1s;
+}
+
+.preset-btn.active {
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0 #000;
+}
+
+/* COLOR PICKERS */
+.color-pickers {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+}
+
+.color-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #666;
+    font-weight: bold;
+    text-transform: lowercase;
+}
+
+input[type="color"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 42px;
+    height: 42px;
+    border: 3px solid #000;
+    border-radius: 0;
+    cursor: pointer;
+    padding: 0;
+    background: none;
+    box-shadow: 3px 3px 0px #000;
+    transition: box-shadow 0.1s, transform 0.1s;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: none; }
+input[type="color"]::-moz-color-swatch { border: none; }
+
+input[type="color"]:hover {
+    box-shadow: 4px 4px 0px #000;
+    transform: translate(-1px, -1px);
+}
+
+.reset-colors-btn {
+    font-size: 12px;
+    padding: 5px 10px;
+    align-self: flex-end;
+    margin-bottom: 16px;
+    border: 1px solid #aaa;
+    color: #888;
+    font-weight: bold;
+    background: #fff;
+}
+
+/* SHARE VIEW SPECIFIC STYLES */
+body.share-view {
+    justify-content: center;
+}
+
+body.share-view #canvasWrap {
+    margin: auto 0;
+}
+
+/* FOOTER */
+footer {
+    margin-top: auto;
+    padding: 28px 0 18px;
+    text-align: center;
+    font-size: 11.5px;
+    color: #888;
+    line-height: 1.9;
+}
+
+footer a {
+    color: #555;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* RESPONSIVE DESIGN FOR MOBILE / ALL DEVICES */
+@media screen and (max-width: 550px) {
+    body {
+        padding: 15px 12px 10px;
+        gap: 15px;
+    }
+    
+    header h1 {
+        font-size: 22px;
+    }
+    
+    textarea {
+        font-size: 14px;
+        padding: 10px 14px;
+        height: 50px;
+    }
+    
+    .controls {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    /* Stack buttons on tiny phone screens for easy tapping */
+    .buttons {
+        flex-direction: column;
+        width: 100%;
+        gap: 6px;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px 0;
+        font-size: 15px;
+    }
+
+    #shareSection {
+        flex-direction: column;
+    }
+}

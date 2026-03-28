@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brat Studio — API & Documentation</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        :root {
+            --doc-bg: #f9f9f9;
+            --doc-border: #e2e8f0;
+            --doc-text: #1e293b;
+            --doc-code-bg: #0f172a;
+            --doc-code-text: #e2e8f0;
+        }
+
+        body.docs-page {
+            background-color: var(--doc-bg);
+            color: var(--doc-text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 60px; /* Space for the fixed header */
+            box-sizing: border-box;
+        }
+
+        body.docs-page * {
+            box-sizing: inherit;
+        }
+
+        /* Top Header Navigation */
+        .top-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: #fff;
+            border-bottom: 1px solid var(--doc-border);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .logo {
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: bold;
+            font-size: 20px;
+            letter-spacing: -1px;
+            color: #000;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #0f172a;
+        }
+
+        .nav-links .back-link {
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: #334155;
+            font-weight: 600;
+        }
+        .nav-links .back-link:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        /* Main Content */
+        .content {
+            margin: 0 auto;
+            padding: 50px 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .content h1 {
+            font-size: 36px;
+            letter-spacing: -1.5px;
+            margin-bottom: 20px;
+            color: #0f172a;
+            margin-top: 0;
+        }
+
+        .content h2 {
+            font-size: 24px;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--doc-border);
+            padding-bottom: 10px;
+            color: #0f172a;
+        }
+
+        .content h3 {
+            font-size: 18px;
+            margin-top: 30px;
+            color: #334155;
+        }
+
+        .content p {
+            line-height: 1.7;
+            font-size: 15px;
+            color: #475569;
+            margin-bottom: 20px;
+        }
+
+        .content ul {
+            margin-bottom: 20px;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .content li {
+            margin-bottom: 8px;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            font-family: monospace;
+            margin-right: 10px;
+        }
+        .badge.post { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .badge.get { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
+
+        /* Code Blocks */
+        pre {
+            background: var(--doc-code-bg);
+            color: var(--doc-code-text);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin: 20px 0;
+        }
+
+        code {
+            font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+            background: #f1f5f9;
+            color: #ef4444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        /* Endpoint Block */
+        .endpoint {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            padding: 15px 20px;
+            border: 1px solid var(--doc-border);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 15px;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: center;
+            }
+            .top-nav {
+                height: auto;
+                padding-top: 15px;
+                padding-bottom: 10px;
+                position: relative; /* Scrolls away on mobile */
+            }
+            body.docs-page {
+                padding-top: 0; /* Remove top offset because nav is relative */
+                display: flex;
+                flex-direction: row; /* For side nav */
+            }
+            /* "dimobile disampinggg" -> Make standard links scroll horizontally on mobile to act like a side-slider, or vertical stack */
+            .nav-links {
+                margin-top: 15px;
+                overflow-x: auto;
+                width: 100%;
+                white-space: nowrap;
+                padding-bottom: 5px;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body class="docs-page">
+
+    <!-- Top Navigation Header -->
+    <header class="top-nav">
+        <div class="nav-container">
+            <div class="logo">brat studio docs</div>
+            <ul class="nav-links">
+                <li><a href="#getting-started">Usage</a></li>
+                <li><a href="#customization">Themes</a></li>
+                <li><a href="#export">Export</a></li>
+                <li><a href="#api-intro">API</a></li>
+                <li><a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Builder</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+        <h1>Developer Documentation</h1>
+        <p>Welcome to the Brat Studio documentation. Here you'll find everything you need to know to use the web interface as a power user, as well as detailed API references for integrating Brat Studio into your own applications.</p>
+
+        <!-- USER GUIDE -->
+        <h2 id="getting-started">Getting Started</h2>
+        <p>Brat Studio is a fully-featured, client-side canvas renderer backed by a lightweight Node.js API. It allows you to create static and dynamic text images featuring the iconic "brat" aesthetic.</p>
+        
+        <h3>Animation Modes</h3>
+        <ul>
+            <li><strong>Normal:</strong> Instantly renders the text layout. Use for fast static outputs.</li>
+            <li><strong>Animate (word):</strong> Sequentially reveals text word-by-word.</li>
+            <li><strong>Typing (char):</strong> Replicates human typing with varied millisecond delays per character.</li>
+        </ul>
+        <p>Adjust the <strong>Speed (WPM)</strong> slider to natively control the millisecond delays across all animations.</p>
+
+        <h2 id="customization">Themes & Backgrounds</h2>
+        <p>Break away from the default white background by utilizing our advanced customization engine.</p>
+        <ul>
+            <li><strong>Opacity Masks:</strong> Upload any local `.jpg` or `.png` as a background. The app automatically applies a 45% opacity color-overlay so your text remains legible.</li>
+            <li><strong>Object Fit:</strong> Adjust how your uploaded image fills the 512x512 canvas using `cover`, `contain`, or `stretch` algorithms.</li>
+        </ul>
+
+        <h2 id="export">Exporting Stickers</h2>
+        <p>Brat Studio utilizes native browser APIs to give you instant exports without server-side processing delays.</p>
+        <ul>
+            <li><strong>Static (PNG):</strong> Triggers <code>canvas.toDataURL()</code> to download a highly requested transparent PNG.</li>
+            <li><strong>Video (MP4/WebM):</strong> We utilize the built-in <code>MediaRecorder</code> API to capture a zero-latency real-time video stream of the <code>&lt;canvas&gt;</code> element. You can stop the recording manually at any time to capture the perfect loop.</li>
+        </ul>
+
+        <hr style="border:0; border-top:1px solid var(--doc-border); margin: 60px 0;">
+
+        <!-- API REFERENCE -->
+        <h2 id="api-intro">API Reference</h2>
+        <p>Our REST API allows you to programmatically create and share Brat posts. The API operates over standard HTTP methods and accepts/returns <code>application/json</code> payloads.</p>
+        <p><strong>Base URL:</strong> <code>http://localhost:3000/api</code></p>
+        <p><em>Authentication:</em> No API key is required for the public endpoints.</p>
+
+        <h2 id="api-create">Create a Post</h2>
+        <p>Upload a new configuration to the database. You can supply different drawing modes (e.g. <code>animate</code>) and inject completely custom RGB/Hex color themes. Returns a unique 8-character ID used for sharing.</p>
+        
+        <div class="endpoint">
+            <span class="badge post">POST</span> /create
+        </div>
+
+        <h3>Example Request: JavaScript <code>fetch</code></h3>
+        <pre><code class="language-javascript">const res = await fetch('http://localhost:3000/api/create', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    text: "brat and it's an api",
+    mode: "animate",
+    theme: JSON.stringify({ bg: "#ff0099", text: "#ffffff" })
+  })
+});
+const data = await res.json();
+console.log(data.id); // e.g., "e9b2f1a6"</code></pre>
+
+        <ul>
+            <li><code>text</code> (required, string): The text to render (max 25 words).</li>
+            <li><code>mode</code> (required, string): One of <code>normal</code>, <code>animate</code>, or <code>typing</code>.</li>
+            <li><code>theme</code> (optional, string): A JSON stringified object containing <code>bg</code> and <code>text</code> hex color definitions to override defaults.</li>
+        </ul>
+
+        <h3>Response (200 OK)</h3>
+        <pre><code class="language-json">{
+  "id": "e9b2f1a6"
+}</code></pre>
+
+        <h2 id="api-get">Retrieve a Post</h2>
+        <p>Fetch the stored configuration of a specific post ID. This endpoint is utilized by the frontend to dynamically reconstruct shared links with the exact original animations and colors.</p>
+
+        <div class="endpoint">
+            <span class="badge get">GET</span> /posts/:id
+        </div>
+
+        <h3>Path Parameters</h3>
+        <ul>
+            <li><code>id</code> (required, string): The unique 8-character hex ID returned by the Create endpoint.</li>
+        </ul>
+
+        <h3>Response (200 OK)</h3>
+        <pre><code class="language-json">{
+  "text": "it's brat but the api is animated and pink",
+  "mode": "animate",
+  "theme": "{\"bg\":\"#ff0099\",\"text\":\"#ffffff\"}"
+}</code></pre>
+
+        <h3>Errors</h3>
+        <ul>
+            <li><code>404 Not Found</code>: Returned if the requested <code>:id</code> does not exist in the database.</li>
+            <li><code>500 Internal Server Error</code>: Returned if there is an SQLite read error.</li>
+        </ul>
+
+        <div style="margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--doc-border); color: #94a3b8; font-size: 13px; text-align: center;">
+            <p>Brat Studio Developer Documentation &copy; 2026</p>
+        </div>
+    </main>
+
+</body>
+</html>
