@@ -3,6 +3,7 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const path = require('path');
+const { renderStickerImage } = require('./render');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -106,6 +107,46 @@ app.get('/api/recent', async (req, res) => {
     }
     
     res.json({ data });
+});
+
+// ─── Sticker API — returns a real PNG image ────────────────────────────────
+// Bot-friendly: GET /api/sticker?text=hello&bg=%238ACE00&color=%23000000
+// Optional params: imageUrl (background image), opacity (0-100, default 45)
+app.get('/api/sticker', async (req, res) => {
+    const {
+        text,
+        bg = '#ffffff',
+        color = '#000000',
+        imageUrl,
+        opacity,
+    } = req.query;
+
+    if (!text || !text.trim()) {
+        return res.status(400).json({ error: '`text` query parameter is required.' });
+    }
+
+    const imageOpacity = opacity ? Math.min(1, Math.max(0, parseInt(opacity, 10) / 100)) : 0.45;
+
+    try {
+        const png = await renderStickerImage({
+            text: text.trim(),
+            bgColor: bg,
+            textColor: color,
+            imageUrl: imageUrl || null,
+            imageOpacity,
+        });
+
+        res.set({
+            'Content-Type': 'image/png',
+            'Content-Length': png.length,
+            'Cache-Control': 'public, max-age=86400',
+            'Content-Disposition': `inline; filename="brat-${Date.now()}.png"`,
+        });
+        res.send(png);
+    } catch (err) {
+        console.error('[sticker]', err);
+        res.status(500).json({ error: 'Failed to render sticker.' });
+    }
 });
 
 // Single Page Path Handler (Routing)
