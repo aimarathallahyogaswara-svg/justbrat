@@ -1,10 +1,15 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brat Studio — API & Documentation</title>
+    <title>JustBratt — API & Developer Documentation</title>
+    <meta name="description" content="Integrate 'JustBratt' with your applications using our free API. Turn any text into the iconic brat-style image instantly. Check out our endpoints for seamless integration.">
+    <meta property="og:title" content="JustBratt — API & Developer Documentation">
+    <meta property="og:description" content="Integrate 'JustBratt' with your applications using our free API. Turn any text into the iconic brat-style image instantly.">
+    <meta name="twitter:title" content="JustBratt — API & Developer Documentation">
+    <meta name="twitter:description" content="Integrate 'JustBratt' with your applications using our free API.">
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -258,7 +263,7 @@
     <!-- Top Navigation Header -->
     <header class="top-nav">
         <div class="nav-container">
-            <div class="logo">brat studio docs</div>
+            <div class="logo">JustBratt Docs</div>
             <ul class="nav-links">
                 <li><a href="#getting-started">Usage</a></li>
                 <li><a href="#customization">Themes</a></li>
@@ -352,8 +357,26 @@ console.log(data.id); // e.g., "e9b2f1a6"</code></pre>
 
         <h3>Response (200 OK)</h3>
         <pre><code class="language-json">{
-  "id": "e9b2f1a6"
+  "id": "e9b2f1a6",
+  "url": "https://justbratt.vercel.app/e9b2f1a6"
 }</code></pre>
+
+        <h2 id="api-bot">Bot Integration (Easy API)</h2>
+        <p>Specifically designed for WhatsApp, Discord, and Telegram bots. This endpoint allows for creation via a simple <code>GET</code> request with query parameters, avoiding the need for complex headers or JSON payloads.</p>
+        
+        <div class="endpoint">
+            <span class="badge get">GET</span> /create
+        </div>
+
+        <h3>Example URL</h3>
+        <pre><code class="language-text">https://justbratt.vercel.app/api/create?text=hello world&mode=animate</code></pre>
+
+        <ul>
+            <li><code>text</code>: URL-encoded string.</li>
+            <li><code>mode</code>: <code>normal</code>, <code>animate</code>, or <code>typing</code>.</li>
+            <li><code>theme</code>: (Optional) URL-encoded JSON string for colors.</li>
+        </ul>
+
 
         <h2 id="api-get">Retrieve a Post</h2>
         <p>Fetch the stored configuration of a specific post ID. This endpoint is utilized by the frontend to
