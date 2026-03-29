@@ -38,9 +38,18 @@ function generateId() {
     return crypto.randomBytes(4).toString('hex'); // 8 characters short id
 }
 
+// Helper to format full URL
+function getFullUrl(req, id) {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host');
+    return `${protocol}://${host}/${id}`;
+}
+
 // API Routes
-app.post('/api/create', async (req, res) => {
-    const { text, mode, theme } = req.body;
+// Unified handler for creating a post (supports POST and GET for bot ease)
+async function handleCreate(req, res) {
+    const { text, mode, theme } = (req.method === 'POST') ? req.body : req.query;
+    
     if (!text || !mode) {
          return res.status(400).json({ error: 'Text and mode are required' });
     }
@@ -55,8 +64,15 @@ app.post('/api/create', async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: 'Database error' });
     }
-    res.json({ id });
-});
+
+    res.json({ 
+        id, 
+        url: getFullUrl(req, id) 
+    });
+}
+
+app.post('/api/create', handleCreate);
+app.get('/api/create', handleCreate);
 
 app.get('/api/posts/:id', async (req, res) => {
     const { id } = req.params;
