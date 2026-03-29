@@ -10,6 +10,7 @@ const shareLink = document.getElementById('shareLink');
 const copyBtn = document.getElementById('copyBtn');
 const waShareBtn = document.getElementById('waShareBtn');
 const editorView = document.getElementById('editorView');
+const canvasWrap = document.getElementById('canvasWrap');
 const sharedHint = document.getElementById('sharedHint');
 const delayRow = document.getElementById('delayRow');
 const delayRange = document.getElementById('delayRange');
@@ -26,7 +27,7 @@ const imgFit = document.getElementById('imgFit');
 const staticStickerBtn = document.getElementById('staticStickerBtn');
 const recordVideoBtn = document.getElementById('recordVideoBtn');
 
-const MAX_WORDS = 25;
+const MAX_WORDS = 1000; // Effectively removed for typical use
 const CANVAS_SIZE = 512;
 
 let animTimer = null;
@@ -102,8 +103,7 @@ function getWords(text) {
 
 function updateWordCount(text) {
     const count = getWords(text).length;
-    wordCountEl.textContent = `${count} / ${MAX_WORDS} words`;
-    wordCountEl.classList.toggle('warn', count >= MAX_WORDS);
+    wordCountEl.textContent = `${count} words`;
 }
 
 // ─── Image Upload ─────────────────────────────────────────────────────────────
@@ -403,6 +403,16 @@ delayRange.addEventListener('input', () => {
 
 renderBtn.addEventListener('click', () => {
     render(textInput.value, modeSelect.value);
+});
+
+document.getElementById('reverseBtn').addEventListener('click', () => {
+    const text = textInput.value;
+    textInput.value = text.split('').reverse().join('');
+    render(textInput.value, modeSelect.value);
+});
+
+canvasWrap.addEventListener('click', () => {
+    textInput.focus();
 });
 
 shareBtn.addEventListener('click', async () => {
