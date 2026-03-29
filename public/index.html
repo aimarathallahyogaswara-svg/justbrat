@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brat Studio — The Ultimate Remake</title>
+    <title>JustBratt — The Ultimate Brat Studio Remake</title>
+    <meta name="description" content="Welcome to JustBratt — The Ultimate Brat Studio Remake. Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API. Check out the docs for endpoints and start bratifying today!">
+    <meta name="keywords" content="brat, brat studio, brat generator, charli xcx, brat aesthetic, text generator, api, bratify">
+    <meta property="og:title" content="JustBratt — The Ultimate Brat Studio Remake">
+    <meta property="og:description" content="Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="JustBratt — The Ultimate Brat Studio Remake">
+    <meta name="twitter:description" content="Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API.">
     <link rel="stylesheet" href="/style.css">
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -13,8 +21,8 @@
     <!-- EDITOR VIEW (hidden on share links) -->
     <div id="editorView">
         <header>
-            <h1>brat studio</h1>
-            <p class="subtitle">the ultimate brat text builder.</p>
+            <h1>JustBratt</h1>
+            <p class="subtitle">Turn boring text into brat-styled chaos instantly.</p>
         </header>
 
         <div class="controls">
@@ -39,8 +47,8 @@
                 <button id="resetColors" class="reset-colors-btn" title="Reset to default">reset</button>
             </div>
 
-            <textarea id="textInput" maxlength="400" placeholder="type anything... emojis work too 🔥"></textarea>
-            <div id="wordCount" class="word-count">0 / 25 words</div>
+            <textarea id="textInput" placeholder="type anything... emojis work too 🔥"></textarea>
+            <div id="wordCount" class="word-count">0 words</div>
 
             <div class="row">
                 <label for="modeSelect">mode:</label>
@@ -85,6 +93,7 @@
 
             <div class="buttons">
                 <button id="renderBtn"><i class="fa-solid fa-play"></i> preview</button>
+                <button id="reverseBtn"><i class="fa-solid fa-repeat"></i> reverse</button>
                 <button id="shareBtn"><i class="fa-solid fa-share-nodes"></i> share</button>
             </div>
 
