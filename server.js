@@ -64,7 +64,7 @@ function isValidHexColor(color) {
 }
 
 function isValidMode(mode) {
-    return ['normal', 'animate', 'typing'].includes(mode);
+    return ['normal', 'animate', 'typing', 'lyrics'].includes(mode);
 }
 
 function isValidUrl(url) {
