@@ -36,6 +36,10 @@ let textColor = '#000000';
 let bgImage = null; // Stores uploaded Image object
 let mediaRecorder = null;
 let recordedChunks = [];
+let cursorBlinkTimer = null;
+let cursorVisible = true;
+let isCanvasFocused = false;
+const canvasTypeHint = document.getElementById('canvasTypeHint');
 
 // ─── Color Management ────────────────────────────────────────────────────────
 
@@ -411,8 +415,69 @@ document.getElementById('reverseBtn').addEventListener('click', () => {
     render(textInput.value, modeSelect.value);
 });
 
+// ─── Canvas Focus / Cursor Blink ────────────────────────────────────────────
+
+function startCursorBlink() {
+    if (cursorBlinkTimer) return;
+    cursorBlinkTimer = setInterval(() => {
+        cursorVisible = !cursorVisible;
+        // Only draw cursor in normal mode (animate/typing have their own timing)
+        if (modeSelect.value === 'normal') {
+            renderWithCursor(textInput.value);
+        }
+    }, 530);
+}
+
+function stopCursorBlink() {
+    if (cursorBlinkTimer) {
+        clearInterval(cursorBlinkTimer);
+        cursorBlinkTimer = null;
+    }
+    cursorVisible = false;
+    if (modeSelect.value === 'normal') {
+        renderWithCursor(textInput.value);
+    }
+}
+
+function renderWithCursor(text) {
+    renderInstant(getWords(text));
+    if (cursorVisible && isCanvasFocused && modeSelect.value === 'normal') {
+        // Draw a blinking pipe cursor at the bottom-right of the text area
+        const words = getWords(text);
+        if (words.length === 0) {
+            // Draw cursor at center
+            ctx.save();
+            ctx.fillStyle = textColor;
+            ctx.font = `bold 80px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.globalAlpha = 0.7;
+            ctx.fillText('|', CANVAS_SIZE / 2 + 40, CANVAS_SIZE / 2);
+            ctx.restore();
+        }
+        // When text present, cursor is implied by the blink on the canvas border
+    }
+}
+
 canvasWrap.addEventListener('click', () => {
     textInput.focus();
+});
+
+textInput.addEventListener('focus', () => {
+    isCanvasFocused = true;
+    canvasWrap.classList.add('canvas-focused');
+    canvasTypeHint.classList.add('hint-hidden');
+    startCursorBlink();
+});
+
+textInput.addEventListener('blur', () => {
+    isCanvasFocused = false;
+    canvasWrap.classList.remove('canvas-focused');
+    stopCursorBlink();
+    // Show hint if canvas has no text
+    if (!textInput.value.trim()) {
+        canvasTypeHint.classList.remove('hint-hidden');
+    }
 });
 
 shareBtn.addEventListener('click', async () => {
@@ -442,8 +507,16 @@ shareBtn.addEventListener('click', async () => {
 copyBtn.addEventListener('click', () => {
     shareLink.select();
     navigator.clipboard.writeText(shareLink.value).catch(() => document.execCommand('copy'));
-    copyBtn.textContent = 'copied!';
-    setTimeout(() => { copyBtn.textContent = 'copy link'; }, 2000);
+    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    copyBtn.style.background = '#e8f5e9';
+    copyBtn.style.color = '#2e7d32';
+    copyBtn.style.borderColor = '#a5d6a7';
+    setTimeout(() => {
+        copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy Link';
+        copyBtn.style.background = '';
+        copyBtn.style.color = '';
+        copyBtn.style.borderColor = '';
+    }, 2000);
 });
 
 waShareBtn.addEventListener('click', () => {
@@ -451,6 +524,16 @@ waShareBtn.addEventListener('click', () => {
     const text = encodeURIComponent('check out my brat text! \n');
     window.open(`https://api.whatsapp.com/send?text=${text}${url}`, '_blank');
 });
+
+// Twitter/X Share
+const twitterShareBtn = document.getElementById('twitterShareBtn');
+if (twitterShareBtn) {
+    twitterShareBtn.addEventListener('click', () => {
+        const url = encodeURIComponent(shareLink.value);
+        const text = encodeURIComponent('check out my brat text! 🟢');
+        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+    });
+}
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
@@ -509,7 +592,7 @@ recordVideoBtn.addEventListener('click', async () => {
     };
 
     mediaRecorder.onstop = () => {
-        recordVideoBtn.innerHTML = '<i class="fa-solid fa-video"></i> record video';
+        recordVideoBtn.innerHTML = '<div class="export-btn-icon"><i class="fa-solid fa-film"></i></div><div class="export-btn-info"><span class="export-btn-title">Record Video</span><span class="export-btn-desc">Capture animation as MP4/WebM</span></div>';
         recordVideoBtn.style.color = '';
         recordVideoBtn.style.borderColor = '';
         
@@ -531,9 +614,8 @@ recordVideoBtn.addEventListener('click', async () => {
     };
 
     // UI state while recording
-    recordVideoBtn.innerHTML = '<i class="fa-solid fa-stop"></i> stop recording';
-    recordVideoBtn.style.color = '#d00';
-    recordVideoBtn.style.borderColor = '#d00';
+    recordVideoBtn.innerHTML = '<div class="export-btn-icon" style="background:linear-gradient(135deg,#ffebee,#ffcdd2);color:#c62828;"><i class="fa-solid fa-stop"></i></div><div class="export-btn-info"><span class="export-btn-title" style="color:#c62828;">Stop Recording</span><span class="export-btn-desc">Click to save your video</span></div>';
+    recordVideoBtn.style.borderColor = '#ef9a9a';
     
     mediaRecorder.start();
 
