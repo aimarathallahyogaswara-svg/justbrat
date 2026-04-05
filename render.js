@@ -1,7 +1,3 @@
-/**
- * render.js — Server-side brat canvas renderer
- * Mirrors the logic from public/app.js using @napi-rs/canvas
- */
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 const CANVAS_SIZE = 512;
@@ -132,12 +128,21 @@ function drawWord(ctx, w, textColor, partialLength) {
  */
 async function renderStickerImage(opts) {
     const {
-        text,
-        bgColor = '#ffffff',
-        textColor = '#000000',
+        text: rawText,
+        bgColor: rawBg = '#ffffff',
+        textColor: rawTextColor = '#000000',
         imageUrl = null,
         imageOpacity = 0.45,
     } = opts;
+
+    // Sanitize inputs
+    const text = (typeof rawText === 'string' ? rawText : '').replace(/<[^>]*>/g, '').trim().slice(0, 500);
+    const bgColor = /^#[0-9a-fA-F]{3,8}$/.test(rawBg) ? rawBg : '#ffffff';
+    const textColor = /^#[0-9a-fA-F]{3,8}$/.test(rawTextColor) ? rawTextColor : '#000000';
+
+    if (!text) {
+        throw new Error('Text is required for rendering.');
+    }
 
     const canvas = createCanvas(CANVAS_SIZE, CANVAS_SIZE);
     const ctx = canvas.getContext('2d');
