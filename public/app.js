@@ -363,6 +363,34 @@ function renderTyping(words) {
     next();
 }
 
+function renderLyrics(words) {
+    clearCanvas();
+    const layout = buildWordLayout(words);
+    if (layout.length === 0) return;
+
+    let i = 0;
+
+    function next() {
+        if (i >= layout.length) return;
+        
+        clearCanvas();
+        drawWord(layout[i]);
+        i++;
+        
+        let delay;
+        if (delayRange) {
+            const wpm = parseInt(delayRange.value, 10);
+            delay = (60000 / wpm) + rand(-20, 20);
+        } else {
+            delay = rand(120, 220); 
+        }
+        
+        animTimer = setTimeout(next, delay);
+    }
+
+    next();
+}
+
 function render(text, mode) {
     if (animTimer) { clearTimeout(animTimer); animTimer = null; }
 
@@ -371,6 +399,8 @@ function render(text, mode) {
         renderTyping(words);
     } else if (mode === 'animate') {
         renderAnimate(words);
+    } else if (mode === 'lyrics') {
+        renderLyrics(words);
     } else {
         renderInstant(words);
     }
@@ -485,6 +515,9 @@ shareBtn.addEventListener('click', async () => {
     const colors = { bg: bgColor, text: textColor };
     if (!text) { alert('type something first.'); return; }
 
+    const originalText = shareBtn.innerHTML;
+    shareBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> loading...';
+    
     try {
         const res = await fetch('/api/create', {
             method: 'POST',
@@ -500,6 +533,8 @@ shareBtn.addEventListener('click', async () => {
     } catch (e) {
         console.error(e);
         alert('could not generate link, try again.');
+    } finally {
+        shareBtn.innerHTML = originalText;
     }
 });
 
@@ -576,10 +611,10 @@ recordVideoBtn.addEventListener('click', async () => {
     }
 
     try {
-        mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2500000 });
+        mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 100000 });
     } catch (e) {
         // Fallback for Safari/iOS
-        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder = new MediaRecorder(stream, { videoBitsPerSecond: 100000 });
         mimeType = mediaRecorder.mimeType || 'video/mp4'; 
     }
     
@@ -649,6 +684,26 @@ recordVideoBtn.addEventListener('click', async () => {
             }
             
             const delay = Math.max(20, Math.round(12000 / wpm) + rand(-10, 10));
+            animTimer = setTimeout(nextFrame, delay);
+        }
+        nextFrame();
+    } else if (mode === 'lyrics') {
+        let wi = 0;
+        function nextFrame() {
+            if (!mediaRecorder || mediaRecorder.state !== 'recording') return; 
+            
+            if (wi >= layout.length) {
+                setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+                }, 1500);
+                return;
+            }
+
+            clearCanvas();
+            drawWord(layout[wi]);
+            wi++;
+            
+            const delay = Math.max(50, Math.round(60000 / wpm) + rand(-20, 20));
             animTimer = setTimeout(nextFrame, delay);
         }
         nextFrame();
