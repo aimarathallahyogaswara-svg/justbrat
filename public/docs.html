@@ -78,6 +78,10 @@
             padding: 0;
         }
 
+        .nav-links li {
+            list-style: none;
+        }
+
         .nav-links a {
             text-decoration: none;
             color: #64748b;
@@ -238,8 +242,7 @@
                 padding-top: 0;
                 /* Remove top offset because nav is relative */
                 display: flex;
-                flex-direction: row;
-                /* For side nav */
+                flex-direction: column;
             }
 
             /* "dimobile disampinggg" -> Make standard links scroll horizontally on mobile to act like a side-slider, or vertical stack */
@@ -269,6 +272,8 @@
                 <li><a href="#customization">Themes</a></li>
                 <li><a href="#export">Export</a></li>
                 <li><a href="#api-intro">API</a></li>
+                <li><a href="#api-bot">Bots</a></li>
+                <li><a href="#api-sticker">Sticker</a></li>
                 <li><a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Builder</a></li>
             </ul>
         </div>
@@ -324,6 +329,7 @@
             methods and accepts/returns <code>application/json</code> payloads.</p>
         <p><strong>Base URL:</strong> <code>https://justbratt.vercel.app/api</code></p>
         <p><em>Authentication:</em> No API key is required for the public endpoints.</p>
+        <p><strong>Rate Limit:</strong> Each IP is limited to <code>60 requests/minute</code> to prevent abuse.</p>
 
         <h2 id="api-create">Create a Post</h2>
         <p>Upload a new configuration to the database. You can supply different drawing modes (e.g.
@@ -331,7 +337,7 @@
             used for sharing.</p>
 
         <div class="endpoint">
-            <span class="badge post">POST</span> /create
+            <span class="badge post">POST</span> /api/create
         </div>
 
         <h3>Example Request: JavaScript <code>fetch</code></h3>
@@ -361,29 +367,116 @@ console.log(data.id); // e.g., "e9b2f1a6"</code></pre>
   "url": "https://justbratt.vercel.app/e9b2f1a6"
 }</code></pre>
 
-        <h2 id="api-bot">Bot Integration (Easy API)</h2>
-        <p>Specifically designed for WhatsApp, Discord, and Telegram bots. This endpoint allows for creation via a simple <code>GET</code> request with query parameters, avoiding the need for complex headers or JSON payloads.</p>
+        <h2 id="api-bot">Bot Integration — Easy GET API</h2>
+        <p>Specifically designed for WhatsApp, Discord, and Telegram bots. Use <code>GET /api/create</code> to save a post and get a shareable URL using just a simple HTTP GET request.</p>
         
         <div class="endpoint">
-            <span class="badge get">GET</span> /create
+            <span class="badge get">GET</span> /api/create?text=...&amp;mode=...
         </div>
 
-        <h3>Example URL</h3>
-        <pre><code class="language-text">https://justbratt.vercel.app/api/create?text=hello world&mode=animate</code></pre>
-
         <ul>
-            <li><code>text</code>: URL-encoded string.</li>
-            <li><code>mode</code>: <code>normal</code>, <code>animate</code>, or <code>typing</code>.</li>
-            <li><code>theme</code>: (Optional) URL-encoded JSON string for colors.</li>
+            <li><code>text</code> (required): URL-encoded string.</li>
+            <li><code>mode</code> (required): <code>normal</code>, <code>animate</code>, or <code>typing</code>.</li>
+            <li><code>theme</code> (optional): URL-encoded JSON string e.g. <code>%7B%22bg%22%3A%22%238ACE00%22%7D</code></li>
         </ul>
 
+        <h3>Response (200 OK)</h3>
+        <pre><code class="language-json">{
+  "id": "e9b2f1a6",
+  "url": "https://justbratt.vercel.app/e9b2f1a6"
+}</code></pre>
+
+        <hr style="border:0; border-top:1px solid var(--doc-border); margin: 50px 0 40px;">
+
+        <h2 id="api-sticker">🖼️ Sticker API — Direct PNG Image</h2>
+        <p>The sticker endpoint renders and returns a <strong>real PNG image (512×512px)</strong> server-side. Just send this URL as a file in your bot — no frontend, no browser needed.</p>
+        
+        <div class="endpoint">
+            <span class="badge get">GET</span> /api/sticker?text=...&amp;bg=...&amp;color=...
+        </div>
+
+        <h3>Query Parameters</h3>
+        <ul>
+            <li><code>text</code> (required): The text to render. URL-encode it.</li>
+            <li><code>bg</code> (optional): Background hex color. Default: <code>#ffffff</code>. Encode <code>#</code> as <code>%23</code>.</li>
+            <li><code>color</code> (optional): Text hex color. Default: <code>#000000</code>.</li>
+            <li><code>imageUrl</code> (optional): A public image URL to use as a background layer.</li>
+            <li><code>opacity</code> (optional): Background image opacity 0–100. Default: <code>45</code>.</li>
+        </ul>
+
+        <h3>Example URLs</h3>
+        <pre><code class="language-text"># Default white/black
+https://justbratt.vercel.app/api/sticker?text=hello+world
+
+# Brat green background
+https://justbratt.vercel.app/api/sticker?text=so+true+bestie&bg=%238ACE00
+
+# Hot pink background, white text
+https://justbratt.vercel.app/api/sticker?text=brat&bg=%23ff0099&color=%23ffffff
+
+# With a background image from URL
+https://justbratt.vercel.app/api/sticker?text=brat&imageUrl=https://example.com/photo.jpg&opacity=40</code></pre>
+
+        <h3>WhatsApp Bot (Baileys)</h3>
+        <pre><code class="language-javascript">const fetch = require('node-fetch');
+
+async function sendBratSticker(sock, jid, text, bg = '#8ACE00') {
+    const url = `https://justbratt.vercel.app/api/sticker?` +
+        `text=${encodeURIComponent(text)}&bg=${encodeURIComponent(bg)}`;
+
+    const res = await fetch(url);
+    const buffer = await res.buffer();
+
+    await sock.sendMessage(jid, {
+        sticker: buffer,
+        mimetype: 'image/webp' // WhatsApp auto-converts PNG→WebP
+    });
+}
+
+// Usage:
+await sendBratSticker(sock, '6281234567890@s.whatsapp.net', 'brat and it\'s yours');</code></pre>
+
+        <h3>Discord Bot (discord.js)</h3>
+        <pre><code class="language-javascript">const { AttachmentBuilder } = require('discord.js');
+const fetch = require('node-fetch');
+
+client.on('messageCreate', async (message) => {
+    if (!message.content.startsWith('!brat ')) return;
+
+    const text = message.content.slice(6).trim();
+    const url = `https://justbratt.vercel.app/api/sticker?text=${encodeURIComponent(text)}&bg=%238ACE00`;
+
+    const res = await fetch(url);
+    const buffer = await res.buffer();
+    const attachment = new AttachmentBuilder(buffer, { name: 'brat.png' });
+
+    await message.reply({ files: [attachment] });
+});</code></pre>
+
+        <h3>Telegram Bot (python-telegram-bot)</h3>
+        <pre><code class="language-python">import requests
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
+
+async def brat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    text = " ".join(ctx.args) if ctx.args else "brat"
+    url = f"https://justbratt.vercel.app/api/sticker?text={requests.utils.quote(text)}&bg=%238ACE00"
+    img_bytes = requests.get(url).content
+    await update.message.reply_photo(photo=img_bytes, caption=f'"{text}" — JustBratt')
+
+app = Application.builder().token("YOUR_BOT_TOKEN").build()
+app.add_handler(CommandHandler("brat", brat))
+app.run_polling()</code></pre>
+
+        <h3>Response</h3>
+        <p>Returns a <code>image/png</code> binary (512×512px). Use it directly as a file attachment, sticker, or <code>&lt;img&gt;</code> src.</p>
 
         <h2 id="api-get">Retrieve a Post</h2>
         <p>Fetch the stored configuration of a specific post ID. This endpoint is utilized by the frontend to
             dynamically reconstruct shared links with the exact original animations and colors.</p>
 
         <div class="endpoint">
-            <span class="badge get">GET</span> /posts/:id
+            <span class="badge get">GET</span> /api/posts/:id
         </div>
 
         <h3>Path Parameters</h3>
