@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +10,9 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="JustBratt — The Ultimate Brat Studio Remake">
     <meta name="twitter:description" content="Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -56,6 +57,7 @@
                     <option value="normal">normal</option>
                     <option value="animate">animate (word)</option>
                     <option value="typing">typing (char)</option>
+                    <option value="lyrics">lyrics (flash)</option>
                 </select>
             </div>
             
@@ -97,18 +99,39 @@
                 <button id="shareBtn"><i class="fa-solid fa-share-nodes"></i> share</button>
             </div>
 
-            <!-- WhatsApp Sticker Export -->
-            <div class="sticker-row">
-                <span class="preset-label"><i class="fa-solid fa-download"></i> export:</span>
-                <button id="staticStickerBtn"><i class="fa-solid fa-image"></i> image</button>
-                <button id="recordVideoBtn"><i class="fa-solid fa-video"></i> record video</button>
+            <!-- Download & Export -->
+            <div class="export-section">
+                <div class="export-header">
+                    <i class="fa-solid fa-arrow-down-to-line"></i>
+                    <span>DOWNLOAD & EXPORT</span>
+                </div>
+                <div class="export-buttons">
+                    <button id="staticStickerBtn" class="export-btn export-png">
+                        <div class="export-btn-icon"><i class="fa-solid fa-image"></i></div>
+                        <div class="export-btn-info">
+                            <span class="export-btn-title">Download PNG</span>
+                            <span class="export-btn-desc">512×512 transparent image</span>
+                        </div>
+                    </button>
+                    <button id="recordVideoBtn" class="export-btn export-video">
+                        <div class="export-btn-icon"><i class="fa-solid fa-film"></i></div>
+                        <div class="export-btn-info">
+                            <span class="export-btn-title">Record Video</span>
+                            <span class="export-btn-desc">Capture animation as MP4/WebM</span>
+                        </div>
+                    </button>
+                </div>
             </div>
 
             <div id="shareSection" class="hidden">
-                <input type="text" id="shareLink" readonly>
-                <div class="share-actions" style="display: flex; gap: 8px;">
-                    <button id="copyBtn" style="flex: 1;">copy link</button>
-                    <button id="waShareBtn" class="wa-btn" style="flex: 1;"><i class="fa-brands fa-whatsapp"></i> whatsapp</button>
+                <div class="share-result-box">
+                    <div class="share-result-label"><i class="fa-solid fa-link"></i> Your share link:</div>
+                    <input type="text" id="shareLink" readonly>
+                </div>
+                <div class="share-actions">
+                    <button id="copyBtn" class="share-action-btn copy-btn"><i class="fa-solid fa-copy"></i> Copy Link</button>
+                    <button id="waShareBtn" class="share-action-btn wa-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                    <button id="twitterShareBtn" class="share-action-btn twitter-btn"><i class="fa-brands fa-x-twitter"></i> Post</button>
                 </div>
             </div>
         </div>
