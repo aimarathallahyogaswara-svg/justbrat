@@ -33,7 +33,7 @@ const CANVAS_SIZE = 512;
 let animTimer = null;
 let bgColor = '#ffffff';
 let textColor = '#000000';
-let bgImage = null; // Stores uploaded Image object
+let bgImage = null; // Stores uploaded Image objectjj
 let mediaRecorder = null;
 let recordedChunks = [];
 let cursorBlinkTimer = null;
@@ -272,8 +272,7 @@ function drawWord(w, partialLength) {
     const textToDraw = partialLength === undefined ? w.text : w.text.substring(0, partialLength);
 
     ctx.save();
-    ctx.filter = 'blur(1.2px)';
-    // Use a font stack that prioritises emoji rendering
+    // Blur removed completely for crisp HD exports
     ctx.font = `bold ${w.size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", Arial, Helvetica, sans-serif`;
     ctx.fillStyle = textColor;
     ctx.textAlign = 'left';
@@ -543,7 +542,6 @@ staticStickerBtn.addEventListener('click', () => {
     setTimeout(() => {
         const link = document.createElement('a');
         
-        // Improve download naming based on typed text
         let filename = 'brat';
         if (textInput.value.trim().length > 0) {
             const titleWords = getWords(textInput.value).slice(0, 3).join('-');
