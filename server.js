@@ -3,7 +3,15 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const path = require('path');
-const { renderStickerImage } = require('./render');
+// Lazy-load render module — @napi-rs/canvas is a native binary that may
+// fail on some serverless platforms.  If it fails we only lose /api/sticker,
+// not every other API route.
+let renderStickerImage;
+try {
+    renderStickerImage = require('./render').renderStickerImage;
+} catch (e) {
+    console.warn('[server] Could not load render module (sticker API disabled):', e.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -155,7 +163,7 @@ async function handleCreate(req, res) {
     }
 
     if (!mode || !isValidMode(mode)) {
-        return res.status(400).json({ error: '`mode` is required. Must be one of: normal, animate, typing.' });
+        return res.status(400).json({ error: '`mode` is required. Must be one of: normal, animate, typing, lyrics.' });
     }
 
     // Validate theme if provided
@@ -246,7 +254,7 @@ app.get('/api/recent', async (req, res) => {
     }
 });
 
-// ─── Sticker API — returns a real PNG image ────────────────────────────────
+// ─── Sticker API — returns a compressed JPEG image ─────────────────────────
 app.get('/api/sticker', async (req, res) => {
     const {
         text,
@@ -254,7 +262,12 @@ app.get('/api/sticker', async (req, res) => {
         color = '#000000',
         imageUrl,
         opacity,
+        quality,
     } = req.query;
+
+    if (!renderStickerImage) {
+        return res.status(503).json({ error: 'Sticker rendering is not available on this server.' });
+    }
 
     if (!text || !text.trim()) {
         return res.status(400).json({ error: '`text` query parameter is required.' });
@@ -275,23 +288,27 @@ app.get('/api/sticker', async (req, res) => {
 
     const sanitizedText = sanitizeText(text);
     const imageOpacity = opacity ? Math.min(1, Math.max(0, parseInt(opacity, 10) / 100)) : 0.45;
+    // Default quality is 8 (very moldy), user can override with ?quality=1-100
+    const jpegQuality = quality ? Math.max(1, Math.min(100, parseInt(quality, 10))) : 8;
 
     try {
-        const png = await renderStickerImage({
+        const result = await renderStickerImage({
             text: sanitizedText,
             bgColor: bg,
             textColor: color,
             imageUrl: imageUrl || null,
             imageOpacity,
+            quality: jpegQuality,
         });
 
+        const ext = result.mimeType === 'image/jpeg' ? 'jpg' : 'png';
         res.set({
-            'Content-Type': 'image/png',
-            'Content-Length': png.length,
+            'Content-Type': result.mimeType,
+            'Content-Length': result.buffer.length,
             'Cache-Control': 'public, max-age=86400',
-            'Content-Disposition': `inline; filename="brat-${Date.now()}.png"`,
+            'Content-Disposition': `inline; filename="brat-${Date.now()}.${ext}"`,
         });
-        res.send(png);
+        res.send(result.buffer);
     } catch (err) {
         console.error('[sticker]', err);
         res.status(500).json({ error: 'Failed to render sticker.' });
