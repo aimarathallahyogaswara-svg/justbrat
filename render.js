@@ -107,8 +107,8 @@ function drawWord(ctx, w, textColor, partialLength) {
     if (partialLength === 0) return;
     const textToDraw = partialLength === undefined ? w.text : w.text.substring(0, partialLength);
     ctx.save();
-    ctx.filter = 'blur(1.2px)';
-    ctx.font = `bold ${w.size}px Arial, Helvetica, sans-serif`;
+    // Match client-side font stack with emoji support
+    ctx.font = `bold ${w.size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", Arial, Helvetica, sans-serif`;
     ctx.fillStyle = textColor;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -117,14 +117,15 @@ function drawWord(ctx, w, textColor, partialLength) {
 }
 
 /**
- * Renders a brat-style image and returns it as a PNG Buffer.
+ * Renders a brat-style image and returns it as a JPEG Buffer (heavily compressed).
  * @param {object} opts
  * @param {string} opts.text - The text to render
  * @param {string} [opts.bgColor='#ffffff'] - Background hex color
  * @param {string} [opts.textColor='#000000'] - Text hex color
  * @param {string} [opts.imageUrl] - Optional background image URL
  * @param {number} [opts.imageOpacity=0.45] - Background image opacity (0-1)
- * @returns {Promise<Buffer>} PNG image buffer
+ * @param {number} [opts.quality=8] - JPEG quality 1-100 (default 8 = very moldy)
+ * @returns {Promise<{buffer: Buffer, mimeType: string}>} Image buffer and MIME type
  */
 async function renderStickerImage(opts) {
     const {
@@ -133,6 +134,7 @@ async function renderStickerImage(opts) {
         textColor: rawTextColor = '#000000',
         imageUrl = null,
         imageOpacity = 0.45,
+        quality = 8,
     } = opts;
 
     // Sanitize inputs
@@ -175,7 +177,20 @@ async function renderStickerImage(opts) {
         drawWord(ctx, w, textColor, undefined);
     }
 
-    return canvas.toBuffer('image/png');
+    // Output as heavily compressed JPEG for the moldy/burik aesthetic
+    // Clamp quality between 1-100, default is 8 (very crusty)
+    const jpegQuality = Math.max(1, Math.min(100, quality));
+
+    try {
+        // @napi-rs/canvas supports toBuffer('image/jpeg') with quality
+        const buffer = await canvas.encode('jpeg', jpegQuality);
+        return { buffer, mimeType: 'image/jpeg' };
+    } catch (e) {
+        // Fallback: try PNG if JPEG encoding fails
+        console.warn('[render] JPEG encode failed, falling back to PNG:', e.message);
+        const buffer = canvas.toBuffer('image/png');
+        return { buffer, mimeType: 'image/png' };
+    }
 }
 
 module.exports = { renderStickerImage };
