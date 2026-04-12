@@ -434,6 +434,7 @@ header .subtitle {
         position: relative;
         cursor: text;
         border-radius: 9px;
+        transition: transform 0.05s ease-out;
     }
 
     #canvasWrap.canvas-focused canvas {
