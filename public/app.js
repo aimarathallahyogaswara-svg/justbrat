@@ -412,6 +412,13 @@ function render(text, mode) {
 
 textInput.addEventListener('input', () => {
     updateWordCount(textInput.value);
+    
+    // BRAT TYPE pulse effect
+    canvasWrap.style.transform = 'scale(1.05)';
+    setTimeout(() => {
+        canvasWrap.style.transform = 'scale(1)';
+    }, 50);
+
     if (modeSelect.value === 'normal') {
         render(textInput.value, modeSelect.value);
     }
