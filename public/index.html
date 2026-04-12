@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -99,6 +101,18 @@
                 <button id="shareBtn"><i class="fa-solid fa-share-nodes"></i> share</button>
             </div>
 
+            <div id="shareSection" class="hidden">
+                <div class="share-result-box">
+                    <div class="share-result-label"><i class="fa-solid fa-link"></i> Your share link:</div>
+                    <input type="text" id="shareLink" readonly>
+                </div>
+                <div class="share-actions">
+                    <button id="copyBtn" class="share-action-btn copy-btn"><i class="fa-solid fa-copy"></i> Copy Link</button>
+                    <button id="waShareBtn" class="share-action-btn wa-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                    <button id="twitterShareBtn" class="share-action-btn twitter-btn"><i class="fa-brands fa-x-twitter"></i> Post</button>
+                </div>
+            </div>
+
             <!-- Download & Export -->
             <div class="export-section">
                 <div class="export-header">
@@ -109,8 +123,8 @@
                     <button id="staticStickerBtn" class="export-btn export-png">
                         <div class="export-btn-icon"><i class="fa-solid fa-image"></i></div>
                         <div class="export-btn-info">
-                            <span class="export-btn-title">Download PNG</span>
-                            <span class="export-btn-desc">512×512 transparent image</span>
+                            <span class="export-btn-title">Download JPG</span>
+                            <span class="export-btn-desc">512×512 crusty compressed image</span>
                         </div>
                     </button>
                     <button id="recordVideoBtn" class="export-btn export-video">
@@ -123,17 +137,7 @@
                 </div>
             </div>
 
-            <div id="shareSection" class="hidden">
-                <div class="share-result-box">
-                    <div class="share-result-label"><i class="fa-solid fa-link"></i> Your share link:</div>
-                    <input type="text" id="shareLink" readonly>
-                </div>
-                <div class="share-actions">
-                    <button id="copyBtn" class="share-action-btn copy-btn"><i class="fa-solid fa-copy"></i> Copy Link</button>
-                    <button id="waShareBtn" class="share-action-btn wa-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-                    <button id="twitterShareBtn" class="share-action-btn twitter-btn"><i class="fa-brands fa-x-twitter"></i> Post</button>
-                </div>
-            </div>
+
         </div>
     </div>
 
