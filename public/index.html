@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JustBratt — The Ultimate Brat Studio Remake</title>
-    <meta name="description" content="Welcome to JustBratt — The Ultimate Brat Studio Remake. Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API. Check out the docs for endpoints and start bratifying today!">
-    <meta name="keywords" content="brat, brat studio, brat generator, charli xcx, brat aesthetic, text generator, api, bratify">
+    <meta name="description"
+        content="Welcome to JustBratt — The Ultimate Brat Studio Remake. Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API. Check out the docs for endpoints and start bratifying today!">
+    <meta name="keywords"
+        content="brat, brat studio, brat generator, charli xcx, brat aesthetic, text generator, api, bratify">
     <meta property="og:title" content="JustBratt — The Ultimate Brat Studio Remake">
-    <meta property="og:description" content="Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API.">
+    <meta property="og:description"
+        content="Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="JustBratt — The Ultimate Brat Studio Remake">
-    <meta name="twitter:description" content="Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API.">
+    <meta name="twitter:description"
+        content="Turn boring text into brat-styled chaos instantly. Use our free online generator or integrate with your apps via API.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -19,6 +24,7 @@
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
+
 <body>
 
     <!-- EDITOR VIEW (hidden on share links) -->
@@ -28,8 +34,15 @@
             <p class="subtitle">Turn boring text into brat-styled chaos instantly.</p>
         </header>
 
+        <nav class="tabs">
+            <button class="tab-link active" data-tab="textTab"><i class="fa-solid fa-keyboard"></i> Text Gen</button>
+            <button class="tab-link" data-tab="molderTab"><i class="fa-solid fa-image"></i> Bratt2 Molder</button>
+        </nav>
+
         <div class="controls">
-            <!-- Preset Themes -->
+            <!-- TEXT GENERATOR TAB -->
+            <div id="textTab" class="tab-pane active">
+                <!-- Preset Themes -->
             <div class="preset-themes">
                 <span class="preset-label">quick theme:</span>
                 <button id="presetWhite" class="preset-btn active" data-bg="#ffffff" data-text="#000000">white</button>
@@ -62,7 +75,7 @@
                     <option value="lyrics">lyrics (flash)</option>
                 </select>
             </div>
-            
+
             <div class="row hidden" id="delayRow">
                 <label for="delayRange">speed:</label>
                 <input type="range" id="delayRange" min="10" max="300" value="60" step="5">
@@ -107,9 +120,12 @@
                     <input type="text" id="shareLink" readonly>
                 </div>
                 <div class="share-actions">
-                    <button id="copyBtn" class="share-action-btn copy-btn"><i class="fa-solid fa-copy"></i> Copy Link</button>
-                    <button id="waShareBtn" class="share-action-btn wa-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-                    <button id="twitterShareBtn" class="share-action-btn twitter-btn"><i class="fa-brands fa-x-twitter"></i> Post</button>
+                    <button id="copyBtn" class="share-action-btn copy-btn"><i class="fa-solid fa-copy"></i> Copy
+                        Link</button>
+                    <button id="waShareBtn" class="share-action-btn wa-btn"><i class="fa-brands fa-whatsapp"></i>
+                        WhatsApp</button>
+                    <button id="twitterShareBtn" class="share-action-btn twitter-btn"><i
+                            class="fa-brands fa-x-twitter"></i> Post</button>
                 </div>
             </div>
 
@@ -138,6 +154,39 @@
             </div>
 
 
+                </div>
+            </div>
+
+            <!-- BRATT2 MOLDER TAB -->
+            <div id="molderTab" class="tab-pane">
+                <div class="molder-header">
+                    <h3>BRATT2 Image Molder</h3>
+                    <p>Upload a photo and instantly ruin its quality. Moldy aesthetic baby.</p>
+                </div>
+
+                <div class="image-upload-row">
+                    <label class="img-upload-label molder-upload" for="molderInput">
+                        <i class="fa-solid fa-upload"></i> upload photo
+                    </label>
+                    <input type="file" id="molderInput" accept="image/*">
+                </div>
+
+                <div id="molderControls" class="hidden" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="row">
+                        <label for="molderQuality"><i class="fa-solid fa-biohazard"></i> Moldiness:</label>
+                        <input type="range" id="molderQuality" min="1" max="100" value="95">
+                        <span id="molderQualityVal">95%</span>
+                    </div>
+                    <button id="molderDownloadBtn" class="export-btn export-png" style="width: 100%; margin-top: 10px;">
+                        <div class="export-btn-icon"><i class="fa-solid fa-download"></i></div>
+                        <div class="export-btn-info">
+                            <span class="export-btn-title">Download Crusty Image</span>
+                            <span class="export-btn-desc">Save the masterpiece</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -161,4 +210,5 @@
 
     <script src="/app.js"></script>
 </body>
+
 </html>
