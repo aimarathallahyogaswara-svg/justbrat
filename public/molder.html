@@ -34,15 +34,15 @@
             <!-- BRATT2 MOLDER TAB -->
             <div id="molderTab">
                 <div class="molder-header">
-                    <h3>BRATT2 Image Molder</h3>
-                    <p>Upload a photo and instantly ruin its quality. Moldy aesthetic baby.</p>
+                    <h3>BRATT2 Molder (Image & Video)</h3>
+                    <p>Upload a photo or video and instantly ruin its quality to 144p.</p>
                 </div>
 
                 <div class="image-upload-row" style="justify-content: center; margin-bottom: 20px;">
                     <label class="img-upload-label molder-upload" for="molderInput">
-                        <i class="fa-solid fa-upload"></i> upload photo
+                        <i class="fa-solid fa-upload"></i> upload photo / video
                     </label>
-                    <input type="file" id="molderInput" accept="image/*">
+                    <input type="file" id="molderInput" accept="image/*,video/*">
                 </div>
 
                 <div id="molderControls" class="hidden" style="display: flex; flex-direction: column; gap: 8px;">
@@ -59,7 +59,7 @@
                         </div>
                         <button id="molderDownloadBtn" class="export-btn export-png" style="width: 100%;">
                             <div class="export-btn-icon"><i class="fa-solid fa-download"></i></div>
-                            <div class="export-btn-info">
+                            <div class="export-btn-info" id="molderBtnInfo">
                                 <span class="export-btn-title">Download Crusty Image</span>
                                 <span class="export-btn-desc">Save the masterpiece</span>
                             </div>
@@ -73,6 +73,8 @@
     <!-- CANVAS (always visible) -->
     <div id="canvasWrap">
         <canvas id="canvas" width="512" height="512"></canvas>
+        <!-- hidden video element strictly logic for video processing -->
+        <video id="molderVideo" class="hidden" muted playsinline loop style="display:none;"></video>
     </div>
 
     <footer>
