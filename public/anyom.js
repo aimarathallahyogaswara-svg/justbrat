@@ -1,8 +1,3 @@
-// ═══════════════════════════════════════════════════════
-// anyom.js — Community page logic for JustBratt
-// ═══════════════════════════════════════════════════════
-
-// ── Canvas brat renderer (inline, self-contained) ───────────────────────────
 
 function bratRender(canvas, text, bgColor = '#ffffff', textColor = '#000000') {
     const SIZE = canvas.width;
@@ -144,7 +139,10 @@ postBtn.addEventListener('click', async () => {
             body: JSON.stringify({ text, author_name: author, theme }),
         });
 
-        if (!res.ok) throw new Error('Server error');
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `Server HTTP ${res.status}`);
+        }
         const data = await res.json();
 
         // Clear composer
@@ -164,8 +162,8 @@ postBtn.addEventListener('click', async () => {
         renderCardCanvas(card, data);
 
     } catch (e) {
-        alert('gagal post, coba lagi ya 😭');
-        console.error(e);
+        alert('gagal post 😭\nError details: ' + e.message + '\n\n(Kalau error database, pastiin udah jalanin SQL buat bikin Tabel di dashboard Supabase!)');
+        console.error('Post error:', e);
     }
 
     postBtn.disabled = false;
@@ -214,7 +212,10 @@ async function loadFeed(reset = false) {
     }
 
     try {
-        const res = await fetch(`/api/community/posts?limit=${PAGE_SIZE}&offset=${feedOffset}`);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${res.status}`);
+        }
         const data = await res.json();
         const posts = data.posts || [];
 
@@ -370,7 +371,10 @@ async function loadComments(postId) {
         </div>`;
 
     try {
-        const res = await fetch(`/api/community/posts/${postId}/comments`);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${res.status}`);
+        }
         const data = await res.json();
         const comments = data.comments || [];
 
@@ -412,7 +416,10 @@ submitCommentBtn.addEventListener('click', async () => {
             body: JSON.stringify({ author_name: author, comment }),
         });
 
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${res.status}`);
+        }
 
         commentTextInput.value = '';
 
@@ -436,8 +443,8 @@ submitCommentBtn.addEventListener('click', async () => {
         // Update comment count on card
         updateCardCommentCount(currentCommentPostId);
 
-    } catch {
-        alert('gagal kirim komentar 😭');
+    } catch (e) {
+        alert('gagal kirim komentar 😭\nError: ' + e.message);
     }
 
     submitCommentBtn.disabled = false;
