@@ -27,6 +27,8 @@ const imgFit = document.getElementById('imgFit');
 const staticStickerBtn = document.getElementById('staticStickerBtn');
 const recordVideoBtn = document.getElementById('recordVideoBtn');
 
+
+
 const MAX_WORDS = 1000; // Effectively removed for typical use
 const CANVAS_SIZE = 512;
 
