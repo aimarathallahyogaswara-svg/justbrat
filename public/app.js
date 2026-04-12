@@ -517,24 +517,55 @@ shareBtn.addEventListener('click', async () => {
 
     const originalText = shareBtn.innerHTML;
     shareBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> loading...';
+    shareBtn.disabled = true;
     
     try {
+        // Timeout after 10 seconds so we don't hang forever
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const res = await fetch('/api/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text, mode, theme: JSON.stringify(colors) }),
+            signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+            // API returned an error — use fallback hash-based share
+            throw new Error(`API error: ${res.status}`);
+        }
+
         const data = await res.json();
         if (data.id) {
             const url = `${window.location.origin}/${data.id}`;
             shareLink.value = url;
             shareSection.classList.remove('hidden');
+            shareSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            throw new Error('No ID returned');
         }
     } catch (e) {
-        console.error(e);
-        alert('could not generate link, try again.');
+        console.warn('[share] API failed, using fallback hash share:', e.message);
+        
+        // Fallback: encode share data directly in the URL hash
+        // This works even when the database/API is completely down
+        try {
+            const shareData = { t: text, m: mode, c: colors };
+            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData))));
+            const url = `${window.location.origin}/#s=${encoded}`;
+            shareLink.value = url;
+            shareSection.classList.remove('hidden');
+            shareSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } catch (fallbackErr) {
+            console.error('[share] Fallback also failed:', fallbackErr);
+            alert('could not generate link. please try again.');
+        }
     } finally {
         shareBtn.innerHTML = originalText;
+        shareBtn.disabled = false;
     }
 });
 
@@ -583,8 +614,9 @@ staticStickerBtn.addEventListener('click', () => {
             filename = `brat-${titleWords.replace(/[^a-z0-9-]/gi, '')}`;
         }
         
-        link.download = `${filename}.png`;
-        link.href = canvas.toDataURL('image/png');
+        link.download = `${filename}.jpg`;
+        // Use 0.05 quality JPEG for maximum 'moldy/heavily compressed' aesthetic
+        link.href = canvas.toDataURL('image/jpeg', 0.05);
         link.click();
         
         if (modeSelect.value !== 'normal') render(textInput.value, modeSelect.value);
@@ -611,10 +643,10 @@ recordVideoBtn.addEventListener('click', async () => {
     }
 
     try {
-        mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 100000 });
+        mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 50000 });
     } catch (e) {
         // Fallback for Safari/iOS
-        mediaRecorder = new MediaRecorder(stream, { videoBitsPerSecond: 100000 });
+        mediaRecorder = new MediaRecorder(stream, { videoBitsPerSecond: 50000 });
         mimeType = mediaRecorder.mimeType || 'video/mp4'; 
     }
     
@@ -735,6 +767,31 @@ recordVideoBtn.addEventListener('click', async () => {
 
 async function init() {
     clearCanvas();
+
+    // Check for hash-based fallback share link first
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#s=')) {
+        try {
+            const encoded = hash.substring(3);
+            const decoded = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+            
+            editorView.classList.add('hidden');
+            sharedHint.classList.remove('hidden');
+            document.body.classList.add('share-view');
+            
+            textInput.value = decoded.t || '';
+            modeSelect.value = decoded.m || 'normal';
+            
+            if (decoded.c && decoded.c.bg && decoded.c.text) {
+                applyColors(decoded.c.bg, decoded.c.text, false);
+            }
+            
+            render(decoded.t || '', decoded.m || 'normal');
+            return;
+        } catch (e) {
+            console.warn('[init] Could not parse hash share:', e.message);
+        }
+    }
 
     const pathId = window.location.pathname.replace(/^\//, '');
 
