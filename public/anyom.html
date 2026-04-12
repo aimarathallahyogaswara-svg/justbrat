@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JustBratt Community — Share Your Brat Anonymously</title>
+    <meta name="description"
+        content="JustBratt Community — Post your brat-styled text for everyone to see. Stay anonim or put your name. Comment, share, vibe.">
+    <meta property="og:title" content="JustBratt Community">
+    <meta property="og:description" content="Brat words for everyone. Post anonymously, comment, share.">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/anyom.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body class="anyom-body">
+
+    <!-- ── HEADER ── -->
+    <div id="anyomApp">
+        <header>
+            <h1>JustBratt</h1>
+            <p class="subtitle">Turn boring text into brat-styled chaos instantly.</p>
+        </header>
+
+        <nav class="tabs">
+            <a href="/" class="tab-link"><i class="fa-solid fa-keyboard"></i> Text Gen</a>
+            <a href="/molder.html" class="tab-link"><i class="fa-solid fa-image"></i> Bratt2 Molder</a>
+            <a href="/anyom.html" class="tab-link active"><i class="fa-solid fa-users"></i> Community</a>
+        </nav>
+
+        <!-- ── POST COMPOSER ── -->
+        <div class="anyom-composer controls">
+            <div class="composer-header">
+                <i class="fa-solid fa-pen-nib"></i>
+                <span>Post Something Brat</span>
+            </div>
+
+            <!-- Canvas preview small -->
+            <div class="composer-canvas-wrap">
+                <canvas id="composerCanvas" width="512" height="512"></canvas>
+                <div class="composer-canvas-hint">preview</div>
+            </div>
+
+            <div class="composer-fields">
+                <textarea id="communityText" placeholder="type your brat words... 🔥" maxlength="300"></textarea>
+                <div class="word-count" id="charCount">0 / 300</div>
+
+                <div class="composer-row">
+                    <div class="preset-themes">
+                        <span class="preset-label">theme:</span>
+                        <button class="preset-btn anyom-preset active" data-bg="#ffffff" data-text="#000000">white</button>
+                        <button class="preset-btn anyom-preset" data-bg="#8ACE00" data-text="#000000">green</button>
+                        <button class="preset-btn anyom-preset" data-bg="#000000" data-text="#ffffff">black</button>
+                    </div>
+                </div>
+
+                <div class="composer-row name-row">
+                    <i class="fa-solid fa-user-secret"></i>
+                    <input type="text" id="authorName" placeholder="your name (leave blank = anonim)" maxlength="32">
+                </div>
+
+                <button id="postCommunityBtn" class="post-btn">
+                    <i class="fa-solid fa-paper-plane"></i> Post to Community
+                </button>
+            </div>
+        </div>
+
+        <!-- ── FEED ── -->
+        <div class="anyom-feed-header">
+            <span><i class="fa-solid fa-fire"></i> community feed</span>
+            <button id="refreshFeedBtn" class="refresh-btn"><i class="fa-solid fa-rotate-right"></i></button>
+        </div>
+
+        <div id="communityFeed" class="anyom-feed">
+            <div class="feed-loading">
+                <div class="loading-dots"><span></span><span></span><span></span></div>
+                loading posts...
+            </div>
+        </div>
+
+        <button id="loadMoreBtn" class="load-more-btn hidden">
+            <i class="fa-solid fa-chevron-down"></i> load more
+        </button>
+    </div>
+
+    <!-- ── SHARE TOAST ANIMATION ── -->
+    <div id="shareToast" class="share-toast hidden">
+        <div class="share-toast-inner">
+            <div class="share-toast-icon">🔥</div>
+            <div class="share-toast-text">dropped!</div>
+        </div>
+    </div>
+
+    <!-- ── COMMENT MODAL ── -->
+    <div id="commentModal" class="comment-modal hidden">
+        <div class="comment-modal-backdrop"></div>
+        <div class="comment-modal-panel">
+            <div class="comment-modal-header">
+                <span><i class="fa-solid fa-comment"></i> comments</span>
+                <button id="closeCommentModal" class="close-modal-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div id="commentCanvas" class="comment-post-preview">
+                <canvas id="commentPreviewCanvas" width="512" height="512"></canvas>
+            </div>
+
+            <div id="commentPostText" class="comment-post-caption"></div>
+
+            <div id="commentsList" class="comments-list">
+                <div class="feed-loading">
+                    <div class="loading-dots"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+
+            <div class="comment-composer">
+                <input type="text" id="commentNameInput" placeholder="name (or anonim)" maxlength="32">
+                <textarea id="commentTextInput" placeholder="say something..." maxlength="200"></textarea>
+                <button id="submitCommentBtn">
+                    <i class="fa-solid fa-paper-plane"></i> send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Remake by Me aka diddluck</p>
+        <p>Inspired by <a href="https://www.bratgenerator.com/" target="_blank">https://www.bratgenerator.com/</a></p>
+        <p><a href="/policy.html">Privacy Policy & Terms</a> | <a href="/docs.html">How to Use (Docs)</a></p>
+        <p>Thank u visiting this web</p>
+    </footer>
+
+    <script src="/anyom.js"></script>
+</body>
+
+</html>
