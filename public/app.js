@@ -32,10 +32,21 @@ const recordVideoBtn = document.getElementById('recordVideoBtn');
 const MAX_WORDS = 1000; // Effectively removed for typical use
 const CANVAS_SIZE = 512;
 
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0/dist/transformers.min.js';
+// Prevent local model fetching since we are in the browser
+env.allowLocalModels = false;
+
 let animTimer = null;
 let bgColor = '#ffffff';
 let textColor = '#000000';
-let bgImage = null; // Stores uploaded Image objectjj
+let bgImage = null; 
+let bgVideo = null;
+let activeDrawItems = [];
+let renderLoopActive = false;
+let autoLyricsTimeline = []; // Array of { word, start, end }
+let isAudioPlaying = false;
+let globalAudio = null;
+
 let mediaRecorder = null;
 let recordedChunks = [];
 let cursorBlinkTimer = null;
@@ -118,18 +129,39 @@ imageInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-        bgImage = img;
-        clearImageBtn.classList.remove('hidden');
-        imageSettings.classList.remove('hidden');
-        render(textInput.value, modeSelect.value);
-    };
-    img.src = url;
+    
+    if (file.type.startsWith('video/')) {
+        bgImage = null;
+        if (bgVideo) { bgVideo.pause(); bgVideo.src = ''; }
+        bgVideo = document.createElement('video');
+        bgVideo.muted = true;
+        bgVideo.loop = true;
+        bgVideo.playsInline = true;
+        bgVideo.oncanplay = () => {
+            bgVideo.play();
+            clearImageBtn.classList.remove('hidden');
+            imageSettings.classList.remove('hidden');
+            render(textInput.value, modeSelect.value);
+            startRenderLoop();
+        };
+        bgVideo.src = url;
+    } else {
+        if (bgVideo) { bgVideo.pause(); bgVideo.src = ''; bgVideo = null; }
+        const img = new Image();
+        img.onload = () => {
+            bgImage = img;
+            clearImageBtn.classList.remove('hidden');
+            imageSettings.classList.remove('hidden');
+            render(textInput.value, modeSelect.value);
+            startRenderLoop();
+        };
+        img.src = url;
+    }
 });
 
 clearImageBtn.addEventListener('click', () => {
     bgImage = null;
+    if (bgVideo) { bgVideo.pause(); bgVideo.src = ''; bgVideo = null; }
     imageInput.value = '';
     clearImageBtn.classList.add('hidden');
     imageSettings.classList.add('hidden');
@@ -147,26 +179,31 @@ imgFit.addEventListener('change', () => {
 
 // ─── Canvas Core ─────────────────────────────────────────────────────────────
 
-function clearCanvas() {
+function clearCanvasBackground() {
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     
-    // Draw background image if set
-    if (bgImage) {
+    const media = bgVideo || bgImage;
+    if (media) {
+        // Fallback for video dimensions
+        let mWidth = media.videoWidth || media.width;
+        let mHeight = media.videoHeight || media.height;
+        if (!mWidth || !mHeight) return;
+
         const opacity = parseInt(imgOpacity.value, 10) / 100;
         const fit = imgFit.value;
         let drawW, drawH, offsetX, offsetY;
 
         if (fit === 'cover') {
-            const scale = Math.max(CANVAS_SIZE / bgImage.width, CANVAS_SIZE / bgImage.height);
-            drawW = bgImage.width * scale;
-            drawH = bgImage.height * scale;
+            const scale = Math.max(CANVAS_SIZE / mWidth, CANVAS_SIZE / mHeight);
+            drawW = mWidth * scale;
+            drawH = mHeight * scale;
             offsetX = (CANVAS_SIZE - drawW) / 2;
             offsetY = (CANVAS_SIZE - drawH) / 2;
         } else if (fit === 'contain') {
-            const scale = Math.min(CANVAS_SIZE / bgImage.width, CANVAS_SIZE / bgImage.height);
-            drawW = bgImage.width * scale;
-            drawH = bgImage.height * scale;
+            const scale = Math.min(CANVAS_SIZE / mWidth, CANVAS_SIZE / mHeight);
+            drawW = mWidth * scale;
+            drawH = mHeight * scale;
             offsetX = (CANVAS_SIZE - drawW) / 2;
             offsetY = (CANVAS_SIZE - drawH) / 2;
         } else { // stretch
@@ -177,9 +214,30 @@ function clearCanvas() {
         }
 
         ctx.globalAlpha = opacity;
-        ctx.drawImage(bgImage, offsetX, offsetY, drawW, drawH);
+        ctx.drawImage(media, offsetX, offsetY, drawW, drawH);
         ctx.globalAlpha = 1.0;
     }
+}
+
+function startRenderLoop() {
+    if (!renderLoopActive) {
+        renderLoopActive = true;
+        renderLoop();
+    }
+}
+
+function renderLoop() {
+    clearCanvasBackground();
+    for (const item of activeDrawItems) {
+        drawWordActual(item.w, item.partialLength);
+    }
+    if (renderLoopActive) {
+        requestAnimationFrame(renderLoop);
+    }
+}
+
+function clearCanvas() {
+    activeDrawItems = [];
 }
 
 function buildWordLayout(words) {
@@ -353,6 +411,10 @@ function buildSplitLayout(words) {
 }
 
 function drawWord(w, partialLength) {
+    activeDrawItems.push({ w, partialLength });
+}
+
+function drawWordActual(w, partialLength) {
     if (partialLength === 0) return;
     const textToDraw = partialLength === undefined ? w.text : w.text.substring(0, partialLength);
 
@@ -456,6 +518,7 @@ function renderTyping(words) {
 
 function renderLyrics(words) {
     clearCanvas();
+    startRenderLoop();
     const layout = buildWordLayout(words);
     if (layout.length === 0) return;
 
@@ -482,16 +545,58 @@ function renderLyrics(words) {
     next();
 }
 
-function render(text, mode) {
+function renderLyrics2() {
+    clearCanvas();
+    startRenderLoop();
+    if (autoLyricsTimeline.length === 0) {
+        activeDrawItems.push({ w: { text: "Upload MP3 first", x: 100, y: CANVAS_SIZE/2, size: 40 } });
+        return;
+    }
+    if (!globalAudio) return;
+    
+    // The render loop will handle timestamp checking
     if (animTimer) { clearTimeout(animTimer); animTimer = null; }
+    
+    function nextFrame() {
+        if (!globalAudio || globalAudio.paused) return; // Exit if paused/stopped
+        const t = globalAudio.currentTime;
+        
+        // Find which words should be visible right now. (We'll flash words as they are spoken)
+        // Or we could show all spoken words, but lyrics flash is cooler.
+        const currentWord = autoLyricsTimeline.find(word => t >= word.start && t <= word.end + 0.3); // add 300ms tail
+        
+        clearCanvas();
+        if (currentWord) {
+            // Recompute layout for just this word to center it like brat
+            const layout = buildWordLayout([currentWord.text]);
+            for(let w of layout) drawWord(w);
+        }
+        
+        if (!globalAudio.paused && !globalAudio.ended) {
+            animTimer = setTimeout(nextFrame, 50); // check 20fps
+        }
+    }
+    nextFrame();
+}
+
+function render(text, mode) {
+    if (globalAudio) {
+        globalAudio.pause();
+        globalAudio.currentTime = 0;
+    }
 
     const words = getWords(text);
+    startRenderLoop();
+
     if (mode === 'typing') {
         renderTyping(words);
     } else if (mode === 'animate') {
         renderAnimate(words);
     } else if (mode === 'lyrics') {
         renderLyrics(words);
+    } else if (mode === 'lyrics2') {
+        if (globalAudio) globalAudio.play();
+        renderLyrics2();
     } else if (mode === 'split') {
         renderSplitInstant(words);
     } else {
@@ -522,9 +627,78 @@ function updateDelayLabel() {
 
 modeSelect.addEventListener('change', () => {
     const isAnimated = modeSelect.value !== 'normal' && modeSelect.value !== 'split';
-    delayRow.classList.toggle('hidden', !isAnimated);
+    const isLyrics2 = modeSelect.value === 'lyrics2';
+    
+    delayRow.classList.toggle('hidden', !isAnimated || isLyrics2); // speed doesn't apply to lyrics2
+    document.getElementById('audioUploadRow').classList.toggle('hidden', !isLyrics2);
+    
     updateDelayLabel();
     render(textInput.value, modeSelect.value);
+});
+
+const audioInput = document.getElementById('audioInput');
+const audioStatus = document.getElementById('audioStatus');
+let transcriber = null;
+
+async function initTranscriber() {
+    if (!transcriber) {
+        audioStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading AI model... (may take a moment)';
+        transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
+        audioStatus.innerHTML = '<i class="fa-solid fa-check"></i> AI model loaded!';
+    }
+}
+
+audioInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (globalAudio) {
+        globalAudio.pause();
+        globalAudio.src = '';
+    }
+
+    const url = URL.createObjectURL(file);
+    globalAudio = new Audio(url);
+
+    try {
+        await initTranscriber();
+        
+        audioStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Extracting lyrics...';
+        
+        // Decode audio data to Float32Array
+        const arrayBuffer = await file.arrayBuffer();
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        const channelData = audioBuffer.getChannelData(0);
+
+        // Transcribe with word-level timestamps
+        const output = await transcriber(channelData, {
+            chunk_length_s: 30,
+            stride_length_s: 5,
+            return_timestamps: 'word'
+        });
+
+        // output.chunks usually contains { text, timestamp: [start, end] }
+        if (output && output.chunks) {
+            autoLyricsTimeline = output.chunks.map(c => ({
+                text: c.text.trim(),
+                start: c.timestamp[0],
+                end: c.timestamp[1]
+            })).filter(c => c.text);
+            
+            audioStatus.innerHTML = '<i class="fa-solid fa-check"></i> Lyrics sync ready!';
+            
+            textInput.value = output.text.trim();
+            updateWordCount(textInput.value);
+            
+            render(textInput.value, modeSelect.value);
+        } else {
+            audioStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> No speech detected.';
+        }
+    } catch (err) {
+        console.error(err);
+        audioStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error parsing audio.';
+    }
 });
 
 delayRange.addEventListener('input', () => {
@@ -734,7 +908,31 @@ recordVideoBtn.addEventListener('click', async () => {
 
     if (animTimer) { clearTimeout(animTimer); animTimer = null; }
 
-    const stream = canvas.captureStream(30);
+    let stream = canvas.captureStream(30);
+
+    // Merge audio if lyrics2 mode
+    if (modeSelect.value === 'lyrics2' && globalAudio) {
+        try {
+            // We create a fresh Audio object from the same source to feed into the stream without breaking the currently playing one
+            const clonedAudio = new Audio(globalAudio.src);
+            const actx = new (window.AudioContext || window.webkitAudioContext)();
+            const source = actx.createMediaElementSource(clonedAudio);
+            const dest = actx.createMediaStreamDestination();
+            source.connect(dest);
+            source.connect(actx.destination);
+            
+            const audioTrack = dest.stream.getAudioTracks()[0];
+            if (audioTrack) {
+                stream = new MediaStream([...stream.getVideoTracks(), audioTrack]);
+            }
+            
+            // We swap globalAudio to this new one so renderLyrics2 reads its currentTime!
+            globalAudio.pause();
+            globalAudio = clonedAudio;
+        } catch (err) {
+            console.error("Audio mixing error:", err);
+        }
+    }
     
     let mimeType = 'video/webm';
     if (MediaRecorder.isTypeSupported('video/mp4')) {
@@ -837,6 +1035,26 @@ recordVideoBtn.addEventListener('click', async () => {
             const delay = Math.max(50, Math.round(60000 / wpm) + rand(-20, 20));
             animTimer = setTimeout(nextFrame, delay);
         }
+        nextFrame();
+    } else if (mode === 'lyrics2') {
+        if (globalAudio) {
+            globalAudio.currentTime = 0;
+            globalAudio.play();
+        }
+        
+        function nextFrame() {
+            if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+            
+            if (!globalAudio || globalAudio.ended) {
+                setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+                }, 1000);
+                return;
+            }
+            // renderLoop handles drawing!
+            animTimer = setTimeout(nextFrame, 200);
+        }
+        renderLyrics2(); // triggers the timeline based rendering (which hooks to renderLoop)
         nextFrame();
     } else {
         // Animate / Normal (word-by-word playback)
