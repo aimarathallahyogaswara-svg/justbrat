@@ -9,7 +9,7 @@ self.onmessage = async (e) => {
     try {
         if (!transcriber) {
             self.postMessage({ status: 'loading' });
-            transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
+            transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base.en');
         }
 
         self.postMessage({ status: 'extracting' });
@@ -25,3 +25,4 @@ self.onmessage = async (e) => {
         self.postMessage({ status: 'error', error: err.message });
     }
 };
+
