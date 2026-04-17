@@ -137,14 +137,16 @@ imageInput.addEventListener('change', (e) => {
         bgVideo.muted = true;
         bgVideo.loop = true;
         bgVideo.playsInline = true;
-        bgVideo.oncanplay = () => {
-            bgVideo.play();
-            clearImageBtn.classList.remove('hidden');
-            imageSettings.classList.remove('hidden');
-            render(textInput.value, modeSelect.value);
-            startRenderLoop();
-        };
         bgVideo.src = url;
+        bgVideo.onloadeddata = () => {
+            bgVideo.play().then(() => {
+                clearImageBtn.classList.remove('hidden');
+                imageSettings.classList.remove('hidden');
+                render(textInput.value, modeSelect.value);
+                startRenderLoop();
+            }).catch(console.error);
+        };
+        bgVideo.load();
     } else {
         if (bgVideo) { bgVideo.pause(); bgVideo.src = ''; bgVideo = null; }
         const img = new Image();
@@ -1154,6 +1156,7 @@ async function init() {
     }
 
     // EDITOR VIEW — default preview
+    modeSelect.dispatchEvent(new Event('change'));
     render('brat', 'normal');
 }
 
