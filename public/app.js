@@ -30,7 +30,6 @@ const recordVideoBtn = document.getElementById('recordVideoBtn');
 
 
 const MAX_WORDS = 1000; // Effectively removed for typical use
-const CANVAS_SIZE = 512;
 
 
 let animTimer = null;
@@ -566,8 +565,8 @@ function renderLyrics2() {
         
         clearCanvas();
         if (currentWord) {
-            // Recompute layout for just this word to center it like brat
-            const layout = buildWordLayout([currentWord.text]);
+            // Because currentWord is now a phrase/sentence, we must break it into words so it wraps gracefully!
+            const layout = buildWordLayout(getWords(currentWord.text));
             for(let w of layout) drawWord(w);
         }
         
@@ -625,11 +624,13 @@ function updateDelayLabel() {
 }
 
 modeSelect.addEventListener('change', () => {
-    const isAnimated = modeSelect.value !== 'normal' && modeSelect.value !== 'split';
-    const isLyrics2 = modeSelect.value === 'lyrics2';
+    const mode = modeSelect.value;
+    const isAnimated = mode !== 'normal' && mode !== 'split';
+    const isLyricsMode = mode === 'lyrics' || mode === 'lyrics2';
+    const isLyrics2 = mode === 'lyrics2';
     
-    // Resize Canvas for lyrics2 (9:16 aspect ratio roughly equivalent, using 512x910)
-    if (isLyrics2) {
+    // Resize Canvas for lyrics modes (9:16 aspect ratio roughly equivalent, using 512x910)
+    if (isLyricsMode) {
         canvas.width = 512;
         canvas.height = 910;
         canvas.style.aspectRatio = '512 / 910';
@@ -643,7 +644,7 @@ modeSelect.addEventListener('change', () => {
     document.getElementById('audioUploadRow').classList.toggle('hidden', !isLyrics2);
     
     updateDelayLabel();
-    render(textInput.value, modeSelect.value);
+    render(textInput.value, mode);
 });
 
 const audioInput = document.getElementById('audioInput');
