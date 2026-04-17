@@ -180,7 +180,7 @@ imgFit.addEventListener('change', () => {
 
 function clearCanvasBackground() {
     ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     const media = bgVideo || bgImage;
     if (media) {
@@ -194,20 +194,20 @@ function clearCanvasBackground() {
         let drawW, drawH, offsetX, offsetY;
 
         if (fit === 'cover') {
-            const scale = Math.max(CANVAS_SIZE / mWidth, CANVAS_SIZE / mHeight);
+            const scale = Math.max(canvas.width / mWidth, canvas.height / mHeight);
             drawW = mWidth * scale;
             drawH = mHeight * scale;
-            offsetX = (CANVAS_SIZE - drawW) / 2;
-            offsetY = (CANVAS_SIZE - drawH) / 2;
+            offsetX = (canvas.width - drawW) / 2;
+            offsetY = (canvas.height - drawH) / 2;
         } else if (fit === 'contain') {
-            const scale = Math.min(CANVAS_SIZE / mWidth, CANVAS_SIZE / mHeight);
+            const scale = Math.min(canvas.width / mWidth, canvas.height / mHeight);
             drawW = mWidth * scale;
             drawH = mHeight * scale;
-            offsetX = (CANVAS_SIZE - drawW) / 2;
-            offsetY = (CANVAS_SIZE - drawH) / 2;
+            offsetX = (canvas.width - drawW) / 2;
+            offsetY = (canvas.height - drawH) / 2;
         } else { // stretch
-            drawW = CANVAS_SIZE;
-            drawH = CANVAS_SIZE;
+            drawW = canvas.width;
+            drawH = canvas.height;
             offsetX = 0;
             offsetY = 0;
         }
@@ -243,8 +243,8 @@ function buildWordLayout(words) {
     if (words.length === 0) return [];
 
     const margin = 40;
-    const maxWidth = CANVAS_SIZE - margin * 2;
-    const maxHeight = CANVAS_SIZE - margin * 2;
+    const maxWidth = canvas.width - margin * 2;
+    const maxHeight = canvas.height - margin * 2;
     
     let fontSize = 160;
     let rows = [];
@@ -298,7 +298,7 @@ function buildWordLayout(words) {
     ctx.font = `bold ${fontSize}px Arial, Helvetica, sans-serif`;
     const layout = [];
     
-    let y = (CANVAS_SIZE - (rows.length * lineHeight)) / 2 + (fontSize / 2);
+    let y = (canvas.height - (rows.length * lineHeight)) / 2 + (fontSize / 2);
 
     for (const row of rows) {
         const rowJitterY = rand(-2, 2);
@@ -348,8 +348,8 @@ function buildSplitLayout(words) {
     // Split the canvas into two halves, each word centered within its half.
     const sideMarginX = 18;
     const marginY = 45;
-    const maxWidthHalf = (CANVAS_SIZE / 2) - sideMarginX * 2;
-    const maxHeight = CANVAS_SIZE - marginY * 2;
+    const maxWidthHalf = (canvas.width / 2) - sideMarginX * 2;
+    const maxHeight = canvas.height - marginY * 2;
 
     let fontSize = 160;
     let lineHeight = 0;
@@ -374,11 +374,11 @@ function buildSplitLayout(words) {
     const totalLeftH = leftWords.length * lineHeight;
     const totalRightH = rightWords.length * lineHeight;
 
-    const startYLeft = (CANVAS_SIZE - totalLeftH) / 2 + (fontSize / 2);
-    const startYRight = (CANVAS_SIZE - totalRightH) / 2 + (fontSize / 2);
+    const startYLeft = (canvas.height - totalLeftH) / 2 + (fontSize / 2);
+    const startYRight = (canvas.height - totalRightH) / 2 + (fontSize / 2);
 
-    const centerXLeft = CANVAS_SIZE / 4;
-    const centerXRight = (CANVAS_SIZE * 3) / 4;
+    const centerXLeft = canvas.width / 4;
+    const centerXRight = (canvas.width * 3) / 4;
 
     // Keep original word order in the returned layout array
     // (useful if later animation modes are added for split).
@@ -548,7 +548,7 @@ function renderLyrics2() {
     clearCanvas();
     startRenderLoop();
     if (autoLyricsTimeline.length === 0) {
-        activeDrawItems.push({ w: { text: "Upload MP3 first", x: 100, y: CANVAS_SIZE/2, size: 40 } });
+        activeDrawItems.push({ w: { text: "Upload MP3 first", x: 100, y: canvas.height/2, size: 40 } });
         return;
     }
     if (!globalAudio) return;
@@ -627,6 +627,17 @@ function updateDelayLabel() {
 modeSelect.addEventListener('change', () => {
     const isAnimated = modeSelect.value !== 'normal' && modeSelect.value !== 'split';
     const isLyrics2 = modeSelect.value === 'lyrics2';
+    
+    // Resize Canvas for lyrics2 (9:16 aspect ratio roughly equivalent, using 512x910)
+    if (isLyrics2) {
+        canvas.width = 512;
+        canvas.height = 910;
+        canvas.style.aspectRatio = '512 / 910';
+    } else {
+        canvas.width = 512;
+        canvas.height = 512;
+        canvas.style.aspectRatio = '1 / 1';
+    }
     
     delayRow.classList.toggle('hidden', !isAnimated || isLyrics2); // speed doesn't apply to lyrics2
     document.getElementById('audioUploadRow').classList.toggle('hidden', !isLyrics2);
@@ -761,7 +772,7 @@ function renderWithCursor(text) {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.globalAlpha = 0.7;
-            ctx.fillText('|', CANVAS_SIZE / 2 + 40, CANVAS_SIZE / 2);
+            ctx.fillText('|', canvas.width / 2 + 40, canvas.height / 2);
             ctx.restore();
         }
         // When text present, cursor is implied by the blink on the canvas border
@@ -1155,7 +1166,7 @@ async function init() {
         ctx.fillStyle = '#999';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('link not found.', CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+        ctx.fillText('link not found.', canvas.width / 2, canvas.height / 2);
         return;
     }
 
