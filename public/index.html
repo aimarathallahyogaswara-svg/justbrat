@@ -21,6 +21,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <!-- Preload Font Awesome for CLS Fix -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
@@ -37,7 +40,6 @@
         <nav class="tabs">
             <a href="/" class="tab-link active"><i class="fa-solid fa-keyboard"></i> Text Gen</a>
             <a href="/molder.html" class="tab-link"><i class="fa-solid fa-image"></i> Bratt2 Molder</a>
-            <a href="/anyom.html" class="tab-link"><i class="fa-solid fa-users"></i> Community</a>
         </nav>
 
         <div class="controls">
@@ -69,6 +71,7 @@
                 <label for="modeSelect">mode:</label>
                 <select id="modeSelect">
                     <option value="normal">normal</option>
+                    <option value="split">split (left/right)</option>
                     <option value="animate">animate (word)</option>
                     <option value="typing">typing (char)</option>
                     <option value="lyrics">lyrics (flash)</option>
@@ -138,8 +141,8 @@
                     <button id="staticStickerBtn" class="export-btn export-png">
                         <div class="export-btn-icon"><i class="fa-solid fa-image"></i></div>
                         <div class="export-btn-info">
-                            <span class="export-btn-title">Download JPG</span>
-                            <span class="export-btn-desc">512×512 crusty compressed image</span>
+                            <span class="export-btn-title">Download PNG</span>
+                            <span class="export-btn-desc">512×512 transparent image</span>
                         </div>
                     </button>
                     <button id="recordVideoBtn" class="export-btn export-video">
@@ -169,7 +172,7 @@
     <footer>
         <p>Remake by Me aka diddluck</p>
         <p>Inspired by <a href="https://www.bratgenerator.com/" target="_blank">https://www.bratgenerator.com/</a></p>
-        <p><a href="/policy.html">Privacy Policy & Terms</a> | <a href="/docs.html">How to Use (Docs)</a></p>
+        <p><a href="/policy.html">Privacy Policy & Terms</a> | <a href="/docs.html">How to Use (Docs)</a> | <a href="/changelog.html">Changelog</a></p>
         <p>Thank u visiting this web</p>
     </footer>
 
