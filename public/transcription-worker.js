@@ -17,7 +17,7 @@ self.onmessage = async (e) => {
         const output = await transcriber(e.data.channelData, {
             chunk_length_s: 30,
             stride_length_s: 5,
-            return_timestamps: 'word'
+            return_timestamps: true
         });
 
         self.postMessage({ status: 'done', output });
@@ -25,4 +25,3 @@ self.onmessage = async (e) => {
         self.postMessage({ status: 'error', error: err.message });
     }
 };
-
