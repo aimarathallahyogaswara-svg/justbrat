@@ -1,8 +1,38 @@
-require('dotenv').config();
+
+const fs = require('fs');
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const path = require('path');
+
+// Lightweight local .env loader (avoids relying on `dotenv` package at runtime).
+function loadLocalEnv() {
+    const envPath = path.join(__dirname, '.env');
+    if (!fs.existsSync(envPath)) return;
+
+    const raw = fs.readFileSync(envPath, 'utf8');
+    const lines = raw.split(/\r?\n/);
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx === -1) continue;
+
+        const key = trimmed.slice(0, eqIdx).trim();
+        let val = trimmed.slice(eqIdx + 1).trim();
+
+        // Remove surrounding quotes if present.
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+        }
+
+        if (key) process.env[key] = val;
+    }
+}
+
+loadLocalEnv();
 // Lazy-load render module — @napi-rs/canvas is a native binary that may
 // fail on some serverless platforms.  If it fails we only lose /api/sticker,
 // not every other API route.
@@ -72,7 +102,7 @@ function isValidHexColor(color) {
 }
 
 function isValidMode(mode) {
-    return ['normal', 'animate', 'typing', 'lyrics'].includes(mode);
+    return ['normal', 'animate', 'typing', 'lyrics', 'split'].includes(mode);
 }
 
 function isValidUrl(url) {
@@ -130,12 +160,100 @@ app.use('/api', rateLimiter);
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 
-let supabase;
+// ─── Unified DB Abstraction ──────────────────────────────────────────────────
+// If Supabase creds are set → use Supabase.
+// Otherwise → fall back to local SQLite (works great locally + on Vercel if
+// you mount a /tmp writable layer, though data won't persist across cold starts).
+let db;
+
 if (supabaseUrl && supabaseKey) {
-    supabase = createClient(supabaseUrl, supabaseKey);
-    console.log("Connected to Supabase.");
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('[db] Using Supabase.');
+
+    db = {
+        async createPost(id, text, mode, theme) {
+            const { error } = await supabase
+                .from('posts')
+                .insert([{ id, text, mode, theme: theme || '' }]);
+            if (error) throw error;
+        },
+        async getPost(id) {
+            const { data, error } = await supabase
+                .from('posts')
+                .select('text, mode, theme, created_at')
+                .eq('id', id)
+                .single();
+            if (error) return null;
+            return data;
+        },
+        async getRecent(limit = 50) {
+            const { data, error } = await supabase
+                .from('posts')
+                .select('id, text, mode, created_at')
+                .order('created_at', { ascending: false })
+                .limit(limit);
+            if (error) throw error;
+            return data || [];
+        },
+    };
 } else {
-    console.error("Missing SUPABASE credentials in .env file! API will crash.");
+    // ── SQLite Fallback ─────────────────────────────────────────────────────
+    console.warn('[db] Supabase credentials missing — falling back to local SQLite.');
+
+    const sqlite3 = require('sqlite3').verbose();
+    const dbPath = process.env.SQLITE_PATH || path.join(__dirname, 'database.sqlite');
+    const sqliteDb = new sqlite3.Database(dbPath);
+
+    // Promisification helpers
+    const run = (sql, params = []) =>
+        new Promise((res, rej) =>
+            sqliteDb.run(sql, params, function (err) {
+                if (err) rej(err); else res(this);
+            }));
+    const get = (sql, params = []) =>
+        new Promise((res, rej) =>
+            sqliteDb.get(sql, params, (err, row) => {
+                if (err) rej(err); else res(row);
+            }));
+    const all = (sql, params = []) =>
+        new Promise((res, rej) =>
+            sqliteDb.all(sql, params, (err, rows) => {
+                if (err) rej(err); else res(rows);
+            }));
+
+    // Ensure the posts table exists
+    sqliteDb.serialize(() => {
+        sqliteDb.run(`
+            CREATE TABLE IF NOT EXISTS posts (
+                id TEXT PRIMARY KEY,
+                text TEXT NOT NULL,
+                mode TEXT NOT NULL,
+                theme TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+        `);
+    });
+
+    db = {
+        async createPost(id, text, mode, theme) {
+            await run(
+                'INSERT INTO posts (id, text, mode, theme) VALUES (?, ?, ?, ?)',
+                [id, text, mode, theme || '']
+            );
+        },
+        async getPost(id) {
+            return await get(
+                'SELECT text, mode, theme, created_at FROM posts WHERE id = ?',
+                [id]
+            ) || null;
+        },
+        async getRecent(limit = 50) {
+            return await all(
+                'SELECT id, text, mode, created_at FROM posts ORDER BY created_at DESC LIMIT ?',
+                [limit]
+            );
+        },
+    };
 }
 
 function generateId() {
@@ -184,19 +302,8 @@ async function handleCreate(req, res) {
     const id = generateId();
 
     try {
-        const { data, error } = await supabase
-            .from('posts')
-            .insert([{ id, text, mode, theme: theme || '' }]);
-
-        if (error) {
-            console.error(error);
-            return res.status(500).json({ error: 'Database error' });
-        }
-
-        res.json({
-            id,
-            url: getFullUrl(req, id)
-        });
+        await db.createPost(id, text, mode, theme);
+        res.json({ id, url: getFullUrl(req, id) });
     } catch (err) {
         console.error('[create]', err);
         res.status(500).json({ error: 'Internal server error' });
@@ -215,18 +322,9 @@ app.get('/api/posts/:id', async (req, res) => {
     }
 
     try {
-        const { data, error } = await supabase
-            .from('posts')
-            .select('text, mode, theme, created_at')
-            .eq('id', id)
-            .single();
-
-        if (error) {
-            console.error(error);
-            return res.status(404).json({ error: 'Post not found' });
-        }
-
-        res.json(data);
+        const row = await db.getPost(id);
+        if (!row) return res.status(404).json({ error: 'Post not found' });
+        res.json(row);
     } catch (err) {
         console.error('[posts]', err);
         res.status(500).json({ error: 'Internal server error' });
@@ -236,18 +334,8 @@ app.get('/api/posts/:id', async (req, res) => {
 // Public recent posts endpoint
 app.get('/api/recent', async (req, res) => {
     try {
-        const { data, error } = await supabase
-            .from('posts')
-            .select('id, text, mode, created_at')
-            .order('created_at', { ascending: false })
-            .limit(50);
-
-        if (error) {
-            console.error(error);
-            return res.status(500).json({ error: 'Database error' });
-        }
-
-        res.json({ data });
+        const rows = await db.getRecent(50);
+        res.json({ data: rows });
     } catch (err) {
         console.error('[recent]', err);
         res.status(500).json({ error: 'Internal server error' });
@@ -263,6 +351,7 @@ app.get('/api/sticker', async (req, res) => {
         imageUrl,
         opacity,
         quality,
+        mode = 'normal',
     } = req.query;
 
     if (!renderStickerImage) {
@@ -271,6 +360,10 @@ app.get('/api/sticker', async (req, res) => {
 
     if (!text || !text.trim()) {
         return res.status(400).json({ error: '`text` query parameter is required.' });
+    }
+
+    if (!isValidMode(mode)) {
+        return res.status(400).json({ error: 'Invalid `mode`. Must be one of: normal, animate, typing, lyrics, split.' });
     }
 
     // Validate colors
@@ -299,6 +392,7 @@ app.get('/api/sticker', async (req, res) => {
             imageUrl: imageUrl || null,
             imageOpacity,
             quality: jpegQuality,
+            mode,
         });
 
         const ext = result.mimeType === 'image/jpeg' ? 'jpg' : 'png';
@@ -315,123 +409,7 @@ app.get('/api/sticker', async (req, res) => {
     }
 });
 
-// ─── Community API ───────────────────────────────────────────────────────────
 
-// GET /api/community/posts?limit=10&offset=0
-app.get('/api/community/posts', async (req, res) => {
-    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
-    const offset = Math.max(0, parseInt(req.query.offset) || 0);
-
-    try {
-        const { data, error } = await supabase
-            .from('community_posts')
-            .select('id, text, author_name, theme, created_at')
-            .order('created_at', { ascending: false })
-            .range(offset, offset + limit - 1);
-
-        if (error) throw error;
-
-        // Attach comment counts
-        const postsWithCounts = await Promise.all((data || []).map(async (post) => {
-            try {
-                const { count } = await supabase
-                    .from('community_comments')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('post_id', post.id);
-                return { ...post, comment_count: count || 0 };
-            } catch {
-                return { ...post, comment_count: 0 };
-            }
-        }));
-
-        res.json({ posts: postsWithCounts });
-    } catch (err) {
-        console.error('[community/posts GET]', err);
-        res.status(500).json({ error: 'Failed to load community posts: ' + (err.message || err.toString()) });
-    }
-});
-
-// POST /api/community/posts
-app.post('/api/community/posts', async (req, res) => {
-    const text = sanitizeText(req.body.text);
-    const author_name = sanitizeText(req.body.author_name || 'anonim').slice(0, 32) || 'anonim';
-    const theme = req.body.theme || '';
-
-    if (!text) return res.status(400).json({ error: '`text` is required.' });
-
-    if (theme) {
-        try {
-            const parsed = JSON.parse(theme);
-            if (parsed.bg && !isValidHexColor(parsed.bg)) return res.status(400).json({ error: 'Invalid bg color.' });
-            if (parsed.text && !isValidHexColor(parsed.text)) return res.status(400).json({ error: 'Invalid text color.' });
-        } catch {
-            return res.status(400).json({ error: 'Invalid theme JSON.' });
-        }
-    }
-
-    const id = generateId();
-    try {
-        const { data, error } = await supabase
-            .from('community_posts')
-            .insert([{ id, text, author_name, theme }])
-            .select('id, text, author_name, theme, created_at')
-            .single();
-
-        if (error) throw error;
-        res.json({ ...data, comment_count: 0 });
-    } catch (err) {
-        console.error('[community/posts POST]', err);
-        res.status(500).json({ error: `Failed to create post. ${err.message || err.toString()}` });
-    }
-});
-
-// GET /api/community/posts/:postId/comments
-app.get('/api/community/posts/:postId/comments', async (req, res) => {
-    const { postId } = req.params;
-    if (!/^[a-f0-9]{8}$/.test(postId)) return res.status(400).json({ error: 'Invalid post ID.' });
-
-    try {
-        const { data, error } = await supabase
-            .from('community_comments')
-            .select('id, author_name, comment, created_at')
-            .eq('post_id', postId)
-            .order('created_at', { ascending: true })
-            .limit(100);
-
-        if (error) throw error;
-        res.json({ comments: data || [] });
-    } catch (err) {
-        console.error('[community/comments GET]', err);
-        res.status(500).json({ error: `Failed to load comments. ${err.message || err.toString()}` });
-    }
-});
-
-// POST /api/community/posts/:postId/comments
-app.post('/api/community/posts/:postId/comments', async (req, res) => {
-    const { postId } = req.params;
-    if (!/^[a-f0-9]{8}$/.test(postId)) return res.status(400).json({ error: 'Invalid post ID.' });
-
-    const comment = sanitizeText(req.body.comment);
-    const author_name = sanitizeText(req.body.author_name || 'anonim').slice(0, 32) || 'anonim';
-
-    if (!comment) return res.status(400).json({ error: '`comment` is required.' });
-    if (comment.length > 200) return res.status(400).json({ error: 'Comment too long (max 200 chars).' });
-
-    const id = generateId();
-    try {
-        const { data, error } = await supabase
-            .from('community_comments')
-            .insert([{ id, post_id: postId, author_name, comment }])
-            .select('id, author_name, comment, created_at')
-            .single();
-
-        if (error) throw error;
-        res.json(data);
-    } catch (err) {
-        console.error('[community/comments POST]', err);
-        res.status(500).json({ error: `Failed to post comment. ${err.message || err.toString()}` });
-    }
-});
 
 // Single Page Path Handler (Routing)
 app.get('/:id', (req, res) => {
@@ -439,10 +417,6 @@ app.get('/:id', (req, res) => {
     // Don't intercept static files with dots (e.g., .css, .js)
     if (id.includes('.')) {
         return res.status(404).end();
-    }
-    // Serve anyom community page
-    if (id === 'anyom') {
-        return res.sendFile(path.join(__dirname, 'public', 'anyom.html'));
     }
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -456,4 +430,3 @@ if (require.main === module) {
 
 // Export for Vercel Serverless
 module.exports = app;
-
