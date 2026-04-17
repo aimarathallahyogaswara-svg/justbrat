@@ -75,6 +75,7 @@
                     <option value="animate">animate (word)</option>
                     <option value="typing">typing (char)</option>
                     <option value="lyrics">lyrics (flash)</option>
+                    <option value="lyrics2">lyrics2 (auto sync)</option>
                 </select>
             </div>
 
@@ -84,16 +85,25 @@
                 <span id="delayValue" style="min-width: 65px;">60 WPM</span>
             </div>
 
-            <!-- Image Upload -->
+            <!-- Auto Lyrics Audio Upload -->
+            <div class="row hidden" id="audioUploadRow">
+                <label class="img-upload-label" for="audioInput" style="background:#8ACE00;color:#000;">
+                    <i class="fa-solid fa-music"></i> upload mp3
+                </label>
+                <input type="file" id="audioInput" accept="audio/mpeg,audio/mp3,audio/wav">
+                <div id="audioStatus" style="font-size:12px;margin-top:5px;"></div>
+            </div>
+
+            <!-- Background Media Upload -->
             <div class="image-upload-row">
                 <label class="img-upload-label" for="imageInput">
-                    <i class="fa-solid fa-image"></i> image background
+                    <i class="fa-solid fa-photo-film"></i> bg image/video
                 </label>
-                <input type="file" id="imageInput" accept="image/*">
+                <input type="file" id="imageInput" accept="image/*,video/*">
                 <button id="clearImageBtn" class="hidden"><i class="fa-solid fa-xmark"></i> remove</button>
             </div>
 
-            <!-- Image Settings (visible only when image is loaded) -->
+            <!-- Media Settings (visible only when media is loaded) -->
             <div id="imageSettings" class="hidden image-settings">
                 <div class="img-setting-row">
                     <label for="imgOpacity"><i class="fa-solid fa-sun"></i> opacity</label>
@@ -176,7 +186,7 @@
         <p>Thank u visiting this web</p>
     </footer>
 
-    <script src="/app.js"></script>
+    <script type="module" src="/app.js"></script>
 </body>
 
 </html>
