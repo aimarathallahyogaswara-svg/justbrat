@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bratt2 Molder — Ruin Your Photos Instantly</title>
+    <meta name="description"
+        content="Welcome to Bratt2 Molder. Compress and mold your photos to achieve the ultimate premium brutalist crusty aesthetic.">
+    <meta property="og:title" content="Bratt2 Molder — Ruin Your Photos Instantly">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <!-- Preload Font Awesome for CLS Fix -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body>
+
+    <div id="editorView">
+        <header>
+            <h1>JustBratt</h1>
+            <p class="subtitle">Turn boring text into brat-styled chaos instantly.</p>
+        </header>
+
+        <nav class="tabs">
+            <a href="/" class="tab-link"><i class="fa-solid fa-keyboard"></i> Text Gen</a>
+            <a href="/molder.html" class="tab-link active"><i class="fa-solid fa-image"></i> Bratt2 Molder</a>
+            <a href="/anyom.html" class="tab-link"><i class="fa-solid fa-users"></i> Community</a>
+        </nav>
+
+        <div class="controls">
+            <!-- BRATT2 MOLDER TAB -->
+            <div id="molderTab">
+                <div class="molder-header">
+                    <h3>BRATT2 Molder (Image & Video)</h3>
+                    <p>Upload a photo or video and instantly ruin its quality to 144p.</p>
+                </div>
+
+                <div class="image-upload-row" style="justify-content: center; margin-bottom: 20px;">
+                    <label class="img-upload-label molder-upload" for="molderInput">
+                        <i class="fa-solid fa-upload"></i> upload photo / video
+                    </label>
+                    <input type="file" id="molderInput" accept="image/*,video/*">
+                </div>
+
+                <div id="molderControls" class="hidden" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="row" style="margin-bottom: 10px;">
+                        <label for="molderQuality"><i class="fa-solid fa-biohazard"></i> Moldiness:</label>
+                        <input type="range" id="molderQuality" min="1" max="100" value="95">
+                        <span id="molderQualityVal" style="min-width: 48px; text-align: right; font-weight: 600;">95%</span>
+                    </div>
+                    
+                    <div class="export-section">
+                        <div class="export-header">
+                            <i class="fa-solid fa-arrow-down-to-line"></i>
+                            <span>DOWNLOAD & EXPORT</span>
+                        </div>
+                        <button id="molderDownloadBtn" class="export-btn export-png" style="width: 100%;">
+                            <div class="export-btn-icon"><i class="fa-solid fa-download"></i></div>
+                            <div class="export-btn-info" id="molderBtnInfo">
+                                <span class="export-btn-title">Download Crusty Image</span>
+                                <span class="export-btn-desc">Save the masterpiece</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CANVAS (always visible) -->
+    <div id="canvasWrap">
+        <canvas id="canvas" width="512" height="512"></canvas>
+        <!-- hidden video element strictly logic for video processing -->
+        <video id="molderVideo" class="hidden" muted playsinline loop style="display:none;"></video>
+    </div>
+
+    <footer>
+        <p>Remake by Me aka diddluck</p>
+        <p>Inspired by <a href="https://www.bratgenerator.com/" target="_blank">https://www.bratgenerator.com/</a></p>
+        <p><a href="/policy.html">Privacy Policy & Terms</a> | <a href="/docs.html">How to Use (Docs)</a> | <a href="/changelog.html">Changelog</a></p>
+        <p>Thank u visiting this web</p>
+    </footer>
+
+    <script src="/molder.js"></script>
+</body>
+
+</html>
