@@ -32,9 +32,6 @@ const recordVideoBtn = document.getElementById('recordVideoBtn');
 const MAX_WORDS = 1000; // Effectively removed for typical use
 const CANVAS_SIZE = 512;
 
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0/dist/transformers.min.js';
-// Prevent local model fetching since we are in the browser
-env.allowLocalModels = false;
 
 let animTimer = null;
 let bgColor = '#ffffff';
@@ -640,14 +637,13 @@ modeSelect.addEventListener('change', () => {
 
 const audioInput = document.getElementById('audioInput');
 const audioStatus = document.getElementById('audioStatus');
-let transcriber = null;
+let transcriberWorker = null;
 
-async function initTranscriber() {
-    if (!transcriber) {
-        audioStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading AI model... (may take a moment)';
-        transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
-        audioStatus.innerHTML = '<i class="fa-solid fa-check"></i> AI model loaded!';
+function getTranscriberWorker() {
+    if (!transcriberWorker) {
+        transcriberWorker = new Worker('/transcription-worker.js', { type: 'module' });
     }
+    return transcriberWorker;
 }
 
 audioInput.addEventListener('change', async (e) => {
@@ -663,9 +659,7 @@ audioInput.addEventListener('change', async (e) => {
     globalAudio = new Audio(url);
 
     try {
-        await initTranscriber();
-        
-        audioStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Extracting lyrics...';
+        audioStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing audio...';
         
         // Decode audio data to Float32Array
         const arrayBuffer = await file.arrayBuffer();
@@ -673,33 +667,43 @@ audioInput.addEventListener('change', async (e) => {
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         const channelData = audioBuffer.getChannelData(0);
 
-        // Transcribe with word-level timestamps
-        const output = await transcriber(channelData, {
-            chunk_length_s: 30,
-            stride_length_s: 5,
-            return_timestamps: 'word'
-        });
+        const worker = getTranscriberWorker();
+        
+        worker.onmessage = (event) => {
+            const { status, output, error } = event.data;
+            
+            if (status === 'loading') {
+                audioStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading AI model... (may take a moment)';
+            } else if (status === 'extracting') {
+                audioStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Extracting lyrics...';
+            } else if (status === 'done') {
+                if (output && output.chunks) {
+                    autoLyricsTimeline = output.chunks.map(c => ({
+                        text: c.text.trim(),
+                        start: c.timestamp[0],
+                        end: c.timestamp[1]
+                    })).filter(c => c.text);
+                    
+                    audioStatus.innerHTML = '<i class="fa-solid fa-check"></i> Lyrics sync ready!';
+                    
+                    textInput.value = output.text.trim();
+                    updateWordCount(textInput.value);
+                    
+                    render(textInput.value, modeSelect.value);
+                } else {
+                    audioStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> No speech detected.';
+                }
+            } else if (status === 'error') {
+                console.error(error);
+                audioStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error parsing audio.';
+            }
+        };
 
-        // output.chunks usually contains { text, timestamp: [start, end] }
-        if (output && output.chunks) {
-            autoLyricsTimeline = output.chunks.map(c => ({
-                text: c.text.trim(),
-                start: c.timestamp[0],
-                end: c.timestamp[1]
-            })).filter(c => c.text);
-            
-            audioStatus.innerHTML = '<i class="fa-solid fa-check"></i> Lyrics sync ready!';
-            
-            textInput.value = output.text.trim();
-            updateWordCount(textInput.value);
-            
-            render(textInput.value, modeSelect.value);
-        } else {
-            audioStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> No speech detected.';
-        }
+        worker.postMessage({ channelData });
+
     } catch (err) {
         console.error(err);
-        audioStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error parsing audio.';
+        audioStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error preparing audio.';
     }
 });
 
